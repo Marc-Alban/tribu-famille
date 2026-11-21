@@ -27,7 +27,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#1E1B4B"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -48,6 +51,12 @@
           "color": "#6366F1"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5e13c5be-011f-49d8-8bf3-1117f2e01640"
+      }
+    },
+    "owner": "fatellim"
   }
 }
