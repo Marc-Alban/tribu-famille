@@ -74,13 +74,19 @@ jobs:
               )
               Spaceship::ConnectAPI.token = token
 
-              # 2. Création automatique du Bundle ID s'il n'existe pas encore
+              # 2. Création automatique du Bundle ID avec seed_id (Team ID)
               bundle_id_resource = nil
               begin
                 b_ids = Spaceship::ConnectAPI.get_bundle_ids(filter: { identifier: "fr.tribufamille.app" }).to_a
                 if b_ids.empty?
                   puts "Creating Bundle ID fr.tribufamille.app on Apple Developer..."
-                  bundle_id_resource = Spaceship::ConnectAPI.post_bundle_id(name: "Tribu Famille", identifier: "fr.tribufamille.app", platform: "IOS")
+                  bundle_id_resource = Spaceship::ConnectAPI.post_bundle_id(
+                    name: "Tribu Famille",
+                    identifier: "fr.tribufamille.app",
+                    platform: "IOS",
+                    seed_id: ENV["APPLE_TEAM_ID"]
+                  )
+                  puts "Bundle ID created successfully!"
                 else
                   puts "Bundle ID fr.tribufamille.app already exists on Apple Developer."
                   bundle_id_resource = b_ids.first
@@ -100,6 +106,7 @@ jobs:
                     primary_locale: "fr-FR",
                     sku: "fr-tribufamille-app"
                   )
+                  puts "App created successfully on App Store Connect!"
                 else
                   puts "App already exists on App Store Connect."
                 end
