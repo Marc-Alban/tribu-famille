@@ -114,18 +114,13 @@ jobs:
                 puts "Note App Store Connect App: #{e.message}"
               end
 
-              # 4. Téléchargement ou génération du certificat de distribution
-              get_certificates(
-                api_key: api_key
-              )
-
-              # 5. Téléchargement ou création automatique du profil de provisioning
+              # 4. Téléchargement ou création automatique du profil de provisioning
               get_provisioning_profile(
                 app_identifier: "fr.tribufamille.app",
                 api_key: api_key
               )
 
-              # 6. Compilation native de l'IPA Release
+              # 5. Compilation native de l'IPA Release
               build_app(
                 project: "TribuFamille.xcodeproj",
                 scheme: "TribuFamille",
@@ -142,7 +137,7 @@ jobs:
                 }
               )
 
-              # 7. Téléversement TestFlight direct
+              # 6. Téléversement TestFlight direct
               upload_to_testflight(
                 api_key: api_key,
                 ipa: "./build/TribuFamille.ipa",
@@ -151,7 +146,7 @@ jobs:
             end
           end
           EOF
-          fastlane beta
+          bundle exec fastlane beta || fastlane beta
 
       - name: 📱 Alerte Telegram
         if: always()

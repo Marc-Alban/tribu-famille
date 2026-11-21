@@ -64,10 +64,9 @@ struct BirthdaysView: View {
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(red: 0.78, green: 0.82, blue: 0.99))
 
-                                Text(next.nextBirthday.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                                Text(next.nextBirthday.formatted(.dateTime.weekday(.wide).day().month(.wide)).capitalized)
                                     .font(.system(size: 12))
                                     .foregroundColor(.gray)
-                                    .textCase(.capitalize)
                             }
                         }
 

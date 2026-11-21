@@ -21,7 +21,6 @@ struct Member: Identifiable, Codable, Equatable {
     var nextAge: Int {
         let calendar = Calendar.current
         let birthYear = calendar.component(.year, from: birthDate)
-        let currentYear = calendar.component(.year, from: Date())
         let nextBirthdayDate = nextBirthday
         let nextYear = calendar.component(.year, from: nextBirthdayDate)
         return nextYear - birthYear
