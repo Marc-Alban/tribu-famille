@@ -20,13 +20,17 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "${{ secrets.ASC_PRIVATE_KEY_BASE64 }}" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
 
-      - name: 🔐 Configuration du certificat de distribution Apple (si présent)
-        if: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 != '' }}
+      - name: 🔐 Configuration du certificat de distribution Apple
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: "ci-keychain-temp-pwd"
         run: |
+          if [ -z "$BUILD_CERTIFICATE_BASE64" ]; then
+            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera l'API App Store Connect pour la signature."
+            exit 0
+          fi
+
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
