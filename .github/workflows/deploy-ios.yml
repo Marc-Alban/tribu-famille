@@ -20,14 +20,14 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "${{ secrets.ASC_PRIVATE_KEY_BASE64 }}" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
 
-      - name: 🔐 Configuration du certificat de distribution Apple
+      - name: 🔐 Configuration du certificat de distribution Apple (si fourni)
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: "ci-keychain-temp-pwd"
         run: |
           if [ -z "$BUILD_CERTIFICATE_BASE64" ]; then
-            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera l'API App Store Connect pour la signature."
+            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera get_certificates avec l'API Apple."
             exit 0
           fi
 
@@ -66,13 +66,21 @@ jobs:
                 in_house: false
               )
 
-              # Téléchargement ou création automatique du profil App Store
+              # 1. Enregistrement automatique de l'App Identifier sur Apple Developer & App Store Connect
+              produce(
+                app_identifier: "fr.tribufamille.app",
+                app_name: "Tribu Famille - Calendrier",
+                language: "French",
+                api_key: api_key
+              )
+
+              # 2. Téléchargement ou création automatique du profil de provisioning
               get_provisioning_profile(
                 app_identifier: "fr.tribufamille.app",
                 api_key: api_key
               )
 
-              # Compilation native de l'IPA Release
+              # 3. Compilation native de l'IPA Release
               build_app(
                 project: "TribuFamille.xcodeproj",
                 scheme: "TribuFamille",
@@ -82,7 +90,7 @@ jobs:
                 output_name: "TribuFamille.ipa"
               )
 
-              # Téléversement TestFlight direct
+              # 4. Téléversement TestFlight direct
               upload_to_testflight(
                 api_key: api_key,
                 ipa: "./build/TribuFamille.ipa",
