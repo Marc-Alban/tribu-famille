@@ -27,7 +27,7 @@ jobs:
           KEYCHAIN_PASSWORD: "ci-keychain-temp-pwd"
         run: |
           if [ -z "$BUILD_CERTIFICATE_BASE64" ]; then
-            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera l'API Apple."
+            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera l'API Apple avec get_certificates."
             exit 0
           fi
 
@@ -114,13 +114,18 @@ jobs:
                 puts "Note App Store Connect App: #{e.message}"
               end
 
-              # 4. Téléchargement ou création automatique du profil de provisioning
+              # 4. Téléchargement ou génération du certificat de distribution
+              get_certificates(
+                api_key: api_key
+              )
+
+              # 5. Téléchargement ou création automatique du profil de provisioning
               get_provisioning_profile(
                 app_identifier: "fr.tribufamille.app",
                 api_key: api_key
               )
 
-              # 5. Compilation native de l'IPA Release
+              # 6. Compilation native de l'IPA Release
               build_app(
                 project: "TribuFamille.xcodeproj",
                 scheme: "TribuFamille",
@@ -130,7 +135,7 @@ jobs:
                 output_name: "TribuFamille.ipa"
               )
 
-              # 6. Téléversement TestFlight direct
+              # 7. Téléversement TestFlight direct
               upload_to_testflight(
                 api_key: api_key,
                 ipa: "./build/TribuFamille.ipa",
