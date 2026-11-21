@@ -1,0 +1,120 @@
+name: Build & Deploy iOS to TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    steps:
+      - name: 📥 Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 📦 Installation des dépendances
+        run: npm install
+
+      - name: 🔑 Configuration de la clé API Apple
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${{ secrets.ASC_PRIVATE_KEY_BASE64 }}" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: 🔐 Configuration du certificat de distribution Apple
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: "ci-keychain-temp-pwd"
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+      - name: 🔨 Génération du projet natif iOS (Prebuild)
+        run: |
+          npx expo prebuild --platform ios --no-install
+
+      - name: ☕ Installation des CocoaPods
+        run: |
+          cd ios
+          pod install
+          cd ..
+
+      - name: 🚀 Compilation et Déploiement TestFlight (Fastlane)
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          mkdir -p fastlane
+          cat << 'EOF' > fastlane/Fastfile
+          default_platform(:ios)
+
+          platform :ios do
+            desc "Build et envoi automatique sur TestFlight sans Expo payant"
+            lane :beta do
+              api_key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_KEY_ID']}.p8")
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_filepath: api_key_path,
+                in_house: false
+              )
+
+              # Téléchargement automatique ou mise à jour du profil de provisioning
+              get_provisioning_profile(
+                app_identifier: "fr.tribufamille.app",
+                api_key: api_key
+              )
+
+              # Compilation du fichier .ipa en mode Release
+              build_app(
+                workspace: "ios/TribuFamille.xcworkspace",
+                scheme: "TribuFamille",
+                configuration: "Release",
+                export_method: "app-store",
+                output_directory: "./build",
+                output_name: "TribuFamille.ipa"
+              )
+
+              # Téléversement direct sur TestFlight
+              upload_to_testflight(
+                api_key: api_key,
+                ipa: "./build/TribuFamille.ipa",
+                skip_waiting_for_build_processing: true
+              )
+            end
+          end
+          EOF
+          bundle exec fastlane beta || fastlane beta
+
+      - name: 📱 Alerte Telegram
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" == "success" ]; then
+            MSG="🚀 Build Tribu Famille TERMINÉ avec succès ! Disponible sur Apple TestFlight !"
+          else
+            MSG="⚠️ Le build iOS Tribu Famille s'est terminé avec le statut : $STATUS"
+          fi
+          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+              -d "text=$MSG"
+          fi
