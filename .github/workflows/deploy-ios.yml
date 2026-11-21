@@ -95,39 +95,12 @@ jobs:
                 puts "Note Bundle ID: #{e.message}"
               end
 
-              # 3. Création automatique de l'App sur App Store Connect si elle n'existe pas
-              begin
-                apps = Spaceship::ConnectAPI.get_apps(filter: { bundleId: "fr.tribufamille.app" }).to_a
-                if apps.empty?
-                  puts "Creating App on App Store Connect for bundle fr.tribufamille.app..."
-                  app_created = nil
-                  begin
-                    app_created = Spaceship::ConnectAPI.post_app(
-                      name: "Tribu Famille Calendrier",
-                      bundle_id: "fr.tribufamille.app",
-                      version_string: "1.0.0",
-                      primary_locale: "fr-FR",
-                      platforms: ["IOS"],
-                      sku: "fr-tribufamille-#{Time.now.to_i}"
-                    )
-                    puts "App created on App Store Connect successfully: #{app_created.id}!"
-                  rescue => err1
-                    puts "Attempt 1 failed: #{err1.message}. Trying with alternate name..."
-                    app_created = Spaceship::ConnectAPI.post_app(
-                      name: "Tribu Famille Partage",
-                      bundle_id: "fr.tribufamille.app",
-                      version_string: "1.0.0",
-                      primary_locale: "fr-FR",
-                      platforms: ["IOS"],
-                      sku: "fr-tribufamille-#{Time.now.to_i}"
-                    )
-                    puts "App created on App Store Connect successfully: #{app_created.id}!"
-                  end
-                else
-                  puts "App already exists on App Store Connect: #{apps.first.name} (ID: #{apps.first.id})"
-                end
-              rescue => e
-                puts "Note App Store Connect App: #{e.message}"
+              # 3. Vérification de la présence de l'App sur App Store Connect
+              apps = Spaceship::ConnectAPI.get_apps(filter: { bundleId: "fr.tribufamille.app" }).to_a
+              if apps.empty?
+                puts "⚠️ L'application fr.tribufamille.app doit être déclarée une première fois sur App Store Connect (My Apps -> + -> New App) avec le Bundle ID fr.tribufamille.app."
+              else
+                puts "✅ App trouvée sur App Store Connect : #{apps.first.name} (ID: #{apps.first.id})"
               end
 
               # 4. Téléchargement ou création automatique du profil de provisioning
