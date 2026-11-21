@@ -103,9 +103,11 @@ jobs:
                   app_created = nil
                   begin
                     app_created = Spaceship::ConnectAPI.post_app(
-                      name: "Tribu Famille - Calendrier",
+                      name: "Tribu Famille Calendrier",
                       bundle_id: "fr.tribufamille.app",
+                      version_string: "1.0.0",
                       primary_locale: "fr-FR",
+                      platforms: ["IOS"],
                       sku: "fr-tribufamille-#{Time.now.to_i}"
                     )
                     puts "App created on App Store Connect successfully: #{app_created.id}!"
@@ -114,7 +116,9 @@ jobs:
                     app_created = Spaceship::ConnectAPI.post_app(
                       name: "Tribu Famille Partage",
                       bundle_id: "fr.tribufamille.app",
+                      version_string: "1.0.0",
                       primary_locale: "fr-FR",
+                      platforms: ["IOS"],
                       sku: "fr-tribufamille-#{Time.now.to_i}"
                     )
                     puts "App created on App Store Connect successfully: #{app_created.id}!"
