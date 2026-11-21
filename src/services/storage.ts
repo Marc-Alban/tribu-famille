@@ -1,15 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FamilyMember, FamilyEvent, PhotoPost, FamilyTribe } from '../types';
+import {
+  FamilyMember,
+  FamilyEvent,
+  PhotoPost,
+  ShoppingItem,
+  FamilyQuote,
+  EmergencyContact,
+} from '../types';
 
 const STORAGE_KEYS = {
   CURRENT_USER: '@tribu_current_user',
-  CURRENT_TRIBE: '@tribu_info',
   MEMBERS: '@tribu_members',
   EVENTS: '@tribu_events',
   POSTS: '@tribu_posts',
+  SHOPPING: '@tribu_shopping',
+  QUOTES: '@tribu_quotes',
+  CONTACTS: '@tribu_contacts',
 };
 
-// Données initiales d'exemple pour une expérience immédiate
 const INITIAL_MEMBERS: FamilyMember[] = [
   {
     id: '1',
@@ -17,7 +25,13 @@ const INITIAL_MEMBERS: FamilyMember[] = [
     role: 'Grand-mère',
     birthDate: '1942-12-05',
     phone: '0612345678',
+    allergies: 'Aucune',
+    bloodType: 'O+',
     isChild: false,
+    wishlist: [
+      { id: 'w-1', title: 'Nouvelles pantoufles chaudes (pointure 38)', priceEstimate: '35€' },
+      { id: 'w-2', title: 'Boîte de chocolats fins pralinés', priceEstimate: '20€', isReservedBy: 'Marc-Alban' },
+    ],
     createdAt: new Date().toISOString(),
   },
   {
@@ -26,7 +40,12 @@ const INITIAL_MEMBERS: FamilyMember[] = [
     role: 'Père',
     birthDate: '1968-04-18',
     phone: '0698765432',
+    bloodType: 'A+',
     isChild: false,
+    wishlist: [
+      { id: 'w-3', title: 'Livre histoire de la bourse & finance', priceEstimate: '25€' },
+      { id: 'w-4', title: 'Set de couteaux de cuisine pro', priceEstimate: '80€' },
+    ],
     createdAt: new Date().toISOString(),
   },
   {
@@ -35,7 +54,11 @@ const INITIAL_MEMBERS: FamilyMember[] = [
     role: 'Mère',
     birthDate: '1970-09-22',
     phone: '0611223344',
+    bloodType: 'O+',
     isChild: false,
+    wishlist: [
+      { id: 'w-5', title: 'Écharpe en cachemire beige', priceEstimate: '60€', isReservedBy: 'Papa' },
+    ],
     createdAt: new Date().toISOString(),
   },
   {
@@ -43,8 +66,13 @@ const INITIAL_MEMBERS: FamilyMember[] = [
     name: 'Lucas',
     role: 'Fils / Petit-fils',
     birthDate: '2016-12-14',
+    allergies: 'Arachides (attention)',
     isChild: true,
     parentId: '2',
+    wishlist: [
+      { id: 'w-6', title: 'Lego Star Wars Vaisseau X-Wing', priceEstimate: '49€' },
+      { id: 'w-7', title: 'Jeu Nintendo Switch Pokémon', priceEstimate: '45€', isReservedBy: 'Mémère Denise' },
+    ],
     createdAt: new Date().toISOString(),
   },
 ];
@@ -68,6 +96,41 @@ const INITIAL_EVENTS: FamilyEvent[] = [
   },
 ];
 
+const INITIAL_SHOPPING: ShoppingItem[] = [
+  { id: 's-1', name: 'Pain frais de campagne (2 boules)', category: 'epicerie', addedByName: 'Mémère Denise', isBought: false, quantity: '2' },
+  { id: 's-2', name: 'Lait entier bio & Beurre doux', category: 'frais', addedByName: 'Maman', isBought: true, quantity: '6L + 1 plaquette' },
+  { id: 's-3', name: 'Clémentines de Corse & Pommes', category: 'fruits-legumes', addedByName: 'Marc-Alban', isBought: false, quantity: '2 kg' },
+  { id: 's-4', name: 'Paquet de couches taille 4', category: 'bebe', addedByName: 'Maman', isBought: false },
+  { id: 's-5', name: 'Café en grains espresso', category: 'epicerie', addedByName: 'Papa', isBought: true },
+];
+
+const INITIAL_QUOTES: FamilyQuote[] = [
+  {
+    id: 'q-1',
+    quoteText: "Mémère, est-ce que le Père Noël il a aussi des lunettes pour voir s'il y a du verglas ?",
+    authorName: 'Lucas (5 ans)',
+    context: 'En regardant la météo avec Mémère',
+    date: 'Décembre 2021',
+    likesCount: 8,
+  },
+  {
+    id: 'q-2',
+    quoteText: "La bourse c'est simple : tu achètes bas et tu vends haut... sauf quand c'est l'heure de passer à table !",
+    authorName: 'Papa',
+    context: 'Pendant le déjeuner du dimanche',
+    date: 'Octobre 2026',
+    likesCount: 6,
+  },
+];
+
+const INITIAL_CONTACTS: EmergencyContact[] = [
+  { id: 'c-1', title: 'Médecin traitant de famille (Dr. Martin)', detail: '02 35 12 34 56', category: 'sante' },
+  { id: 'c-2', title: 'Pédiatre de Lucas (Dr. Leroy)', detail: '02 35 78 90 12', category: 'sante' },
+  { id: 'c-3', title: 'Code Wi-Fi Maison Mémère', detail: 'FamilleMillet2026!', category: 'pratique' },
+  { id: 'c-4', title: 'SAMU / Urgence Médicale', detail: '15', category: 'urgence' },
+  { id: 'c-5', title: 'Pharmacie de garde', detail: '3237', category: 'urgence' },
+];
+
 const INITIAL_POSTS: PhotoPost[] = [
   {
     id: 'post-1',
@@ -79,6 +142,7 @@ const INITIAL_POSTS: PhotoPost[] = [
   },
 ];
 
+// MEMBERS
 export async function getStoredMembers(): Promise<FamilyMember[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEYS.MEMBERS);
@@ -108,6 +172,7 @@ export async function addMemberToTribe(member: Omit<FamilyMember, 'id' | 'create
   return updated;
 }
 
+// EVENTS
 export async function getStoredEvents(): Promise<FamilyEvent[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEYS.EVENTS);
@@ -125,6 +190,61 @@ export async function saveStoredEvents(events: FamilyEvent[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
 }
 
+// SHOPPING LIST
+export async function getStoredShopping(): Promise<ShoppingItem[]> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.SHOPPING);
+    if (!json) {
+      await AsyncStorage.setItem(STORAGE_KEYS.SHOPPING, JSON.stringify(INITIAL_SHOPPING));
+      return INITIAL_SHOPPING;
+    }
+    return JSON.parse(json);
+  } catch {
+    return INITIAL_SHOPPING;
+  }
+}
+
+export async function saveStoredShopping(items: ShoppingItem[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.SHOPPING, JSON.stringify(items));
+}
+
+// FAMILY QUOTES
+export async function getStoredQuotes(): Promise<FamilyQuote[]> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.QUOTES);
+    if (!json) {
+      await AsyncStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(INITIAL_QUOTES));
+      return INITIAL_QUOTES;
+    }
+    return JSON.parse(json);
+  } catch {
+    return INITIAL_QUOTES;
+  }
+}
+
+export async function saveStoredQuotes(quotes: FamilyQuote[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(quotes));
+}
+
+// CONTACTS & HEALTH
+export async function getStoredContacts(): Promise<EmergencyContact[]> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.CONTACTS);
+    if (!json) {
+      await AsyncStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(INITIAL_CONTACTS));
+      return INITIAL_CONTACTS;
+    }
+    return JSON.parse(json);
+  } catch {
+    return INITIAL_CONTACTS;
+  }
+}
+
+export async function saveStoredContacts(contacts: EmergencyContact[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
+}
+
+// POSTS
 export async function getStoredPosts(): Promise<PhotoPost[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEYS.POSTS);
@@ -140,17 +260,4 @@ export async function getStoredPosts(): Promise<PhotoPost[]> {
 
 export async function saveStoredPosts(posts: PhotoPost[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(posts));
-}
-
-export async function getCurrentUser(): Promise<FamilyMember | null> {
-  try {
-    const json = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-    return json ? JSON.parse(json) : null;
-  } catch {
-    return null;
-  }
-}
-
-export async function saveCurrentUser(user: FamilyMember): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
 }
