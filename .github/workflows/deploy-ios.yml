@@ -27,7 +27,7 @@ jobs:
           KEYCHAIN_PASSWORD: "ci-keychain-temp-pwd"
         run: |
           if [ -z "$BUILD_CERTIFICATE_BASE64" ]; then
-            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera get_certificates avec l'API Apple."
+            echo "ℹ️ Aucun certificat P12 fourni, Fastlane utilisera la signature automatique via API Apple."
             exit 0
           fi
 
@@ -66,13 +66,19 @@ jobs:
                 in_house: false
               )
 
-              # 1. Enregistrement automatique de l'App Identifier sur Apple Developer & App Store Connect
-              produce(
-                app_identifier: "fr.tribufamille.app",
-                app_name: "Tribu Famille - Calendrier",
-                language: "French",
-                api_key: api_key
-              )
+              # 1. Vérification / Création automatique du Bundle ID sur Apple Developer
+              begin
+                Spaceship::ConnectAPI.token = api_key
+                b_ids = Spaceship::ConnectAPI.get_bundle_ids(filter: { identifier: "fr.tribufamille.app" })
+                if b_ids.empty?
+                  puts "Création automatique du Bundle ID fr.tribufamille.app sur Apple Developer..."
+                  Spaceship::ConnectAPI.post_bundle_id(name: "Tribu Famille", identifier: "fr.tribufamille.app", platform: "IOS")
+                else
+                  puts "Bundle ID fr.tribufamille.app existant sur Apple Developer."
+                end
+              rescue => e
+                puts "Note Bundle ID: #{e.message}"
+              end
 
               # 2. Téléchargement ou création automatique du profil de provisioning
               get_provisioning_profile(
