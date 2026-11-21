@@ -132,7 +132,14 @@ jobs:
                 configuration: "Release",
                 export_method: "app-store",
                 output_directory: "./build",
-                output_name: "TribuFamille.ipa"
+                output_name: "TribuFamille.ipa",
+                xcargs: "SDKROOT=iphoneos CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE=#{ENV['SIGH_UUID']} PROVISIONING_PROFILE_SPECIFIER='#{ENV['SIGH_NAME']}'",
+                export_options: {
+                  signingStyle: "manual",
+                  provisioningProfiles: {
+                    "fr.tribufamille.app" => ENV["SIGH_UUID"]
+                  }
+                }
               )
 
               # 7. Téléversement TestFlight direct
