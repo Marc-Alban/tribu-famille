@@ -45,50 +45,75 @@ struct ContentView: View {
                 mainAppView
             }
         }
+        .sheet(isPresented: $storage.showOnboardingBirthdaySheet) {
+            OnboardingBirthdaySheet()
+        }
         .preferredColorScheme(.dark)
     }
 
     private var mainAppView: some View {
         ZStack {
-            Color(red: 0.04, green: 0.06, blue: 0.10)
+            Color(red: 0.043, green: 0.059, blue: 0.098)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // TOP HEADER FIGMA STYLE & LUXE
+                // TOP HEADER WILLET FAMILY STYLE LUXE
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            Text(storage.tribeName.isEmpty ? "Tribu Famille" : storage.tribeName)
-                                .font(.system(size: 20, weight: .black))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-
-                            Button(action: {
-                                UIPasteboard.general.string = storage.tribeCode
-                                showCopiedAlert = true
-                            }) {
-                                HStack(spacing: 4) {
-                                    Text(storage.tribeCode)
-                                        .font(.system(size: 10, weight: .bold))
-                                    Image(systemName: "doc.on.doc.fill")
-                                        .font(.system(size: 8))
-                                }
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.15))
-                                .cornerRadius(6)
-                            }
+                    HStack(spacing: 10) {
+                        // BADGE LOGO W
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(red: 0.071, green: 0.094, blue: 0.149))
+                                .frame(width: 36, height: 36)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.5), lineWidth: 1)
+                                )
+                            Text("W")
+                                .font(.system(size: 18, weight: .black, design: .serif))
+                                .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
                         }
 
-                        if let current = storage.currentMember {
-                            Text("Connecté : \(current.name) (\(current.role))")
-                                .font(.system(size: 11))
-                                .foregroundColor(.gray)
-                        } else {
-                            Text("\(storage.members.count) membre(s)")
-                                .font(.system(size: 11))
-                                .foregroundColor(.gray)
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text(storage.tribeName.isEmpty ? "Willet Family" : storage.tribeName)
+                                    .font(.system(size: 18, weight: .black))
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+
+                                Button(action: {
+                                    UIPasteboard.general.string = storage.tribeCode
+                                    showCopiedAlert = true
+                                }) {
+                                    HStack(spacing: 3) {
+                                        Text(storage.tribeCode)
+                                            .font(.system(size: 9, weight: .bold))
+                                        Image(systemName: "doc.on.doc.fill")
+                                            .font(.system(size: 8))
+                                    }
+                                    .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.15))
+                                    .cornerRadius(6)
+                                }
+                            }
+
+                            HStack(spacing: 5) {
+                                Circle()
+                                    .fill(Color(red: 0.063, green: 0.725, blue: 0.506))
+                                    .frame(width: 6, height: 6)
+
+                                if let current = storage.currentMember {
+                                    Text("Connecté : \(current.name) (\(current.role))")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+                                } else {
+                                    Text("\(storage.members.count) membre(s)")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+                                }
+                            }
                         }
                     }
 
@@ -104,14 +129,14 @@ struct ContentView: View {
                             Text("Inviter")
                                 .font(.system(size: 11, weight: .bold))
                         }
-                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
-                        .background(Color(red: 0.12, green: 0.16, blue: 0.23))
+                        .background(Color(red: 0.071, green: 0.094, blue: 0.149))
                         .cornerRadius(10)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.3), lineWidth: 1)
+                                .stroke(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.3), lineWidth: 1)
                         )
                     }
 
@@ -464,308 +489,139 @@ struct UserProfileSheet: View {
     }
 }
 
-// MARK: - ÉCRAN DE BIENVENUE, CRÉATION & REJOINDRE UNE TRIBU
+// MARK: - ÉCRAN DE CONNEXION EXCLUSIF APPLE ID (ZERO FORMULAIRE)
 struct WelcomeAuthView: View {
     @EnvironmentObject var storage: StorageManager
-    @State private var mode = 1 // 0: Créer une Tribu, 1: Rejoindre une Tribu
-    @State private var showAdvancedOptions = true
-    
-    // Identité personnelle
-    @State private var myName = "Marc"
-    @State private var myRole = "Fils"
-    @State private var myBirthDate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
-    @State private var myPhone = ""
-    @State private var myShoeSize = ""
-    @State private var myClothingSize = ""
-    @State private var myFavouriteTreat = ""
-    
-    // Tribu
-    @State private var newTribeName = "Famille Millet"
-    @State private var inputCode = "MILLET-2026"
-    @State private var inputPassword = "2121.bmw"
-    
-    // Feedback
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
     @State private var showErrorAlert = false
 
-    private let roles = ["Père", "Mère", "Fils", "Fille", "Grand-mère", "Grand-père", "Tante", "Oncle", "Cousin", "Cousine"]
-
     var body: some View {
         ZStack {
-            Color(red: 0.04, green: 0.06, blue: 0.10)
+            Color(red: 0.043, green: 0.059, blue: 0.098)
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 20) {
-                    // LOGO & TITRE
-                    VStack(spacing: 10) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(red: 0.96, green: 0.62, blue: 0.04), Color(red: 0.85, green: 0.40, blue: 0.05)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 72, height: 72)
-                                .shadow(color: Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), radius: 12)
+            VStack(spacing: 0) {
+                Spacer()
 
-                            Image(systemName: "person.3.sequence.fill")
-                                .font(.system(size: 30))
-                                .foregroundColor(.black)
-                        }
-
-                        Text("Tribu Famille")
-                            .font(.system(size: 26, weight: .black))
-                            .foregroundColor(.white)
-
-                        Text("L'espace intime & privé de notre famille.")
-                            .font(.system(size: 13))
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 30)
-                    }
-                    .padding(.top, 20)
-
-                    // 1. CARTE CONNEXION APPLE ID & FACE ID DIRECTE
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "applelogo")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            Text("CONNEXION APPLE ID")
-                                .font(.system(size: 11, weight: .black))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .tracking(1)
-                        }
-
-                        Text("Connectez-vous directement avec votre iPhone : votre compte est reconnu instantanément sans ressaisir vos informations.")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                            .lineSpacing(2)
-
-                        // BOUTON OFFICIEL SIGN IN WITH APPLE
-                        SignInWithAppleButton(
-                            .continue,
-                            onRequest: { request in
-                                request.requestedScopes = [.fullName, .email]
-                            },
-                            onCompletion: { result in
-                                handleAppleSignInResult(result)
-                            }
-                        )
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(12)
-
-                        // BOUTON EXPRESS FACE ID / LOCAL AUTH
-                        Button(action: handleQuickFaceID) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "faceid")
-                                    .font(.system(size: 17, weight: .bold))
-                                Text("Accès Rapide Face ID")
-                                    .font(.system(size: 14, weight: .bold))
-                            }
-                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 13)
-                            .background(Color(red: 0.12, green: 0.16, blue: 0.23))
-                            .cornerRadius(12)
+                // LOGO CREST & IDENTITY (WILLET FAMILY FIGMA LUXE)
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.071, green: 0.094, blue: 0.149))
+                            .frame(width: 88, height: 88)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
+                                Circle()
+                                    .stroke(Color(red: 0.961, green: 0.620, blue: 0.043), lineWidth: 2)
                             )
-                        }
-                    }
-                    .padding(16)
-                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.4), lineWidth: 1))
-                    .padding(.horizontal, 16)
+                            .shadow(color: Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.25), radius: 16)
 
-                    // TOGGLE OPTIONS MANUELLES
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            showAdvancedOptions.toggle()
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: showAdvancedOptions ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
-                            Text(showAdvancedOptions ? "Masquer les options manuelles" : "Options manuelles / Autre code Tribu")
-                        }
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.gray)
-                    }
-                    .padding(.top, 4)
-
-                    if showAdvancedOptions {
-                    // 1. MON IDENTITÉ PERSONNELLE
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("1. QUI ÊTES-VOUS ?")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            .tracking(1)
-
-                        VStack(spacing: 10) {
-                            inputRow(label: "Votre Prénom", text: $myName, placeholder: "Ex: Marc")
-
-                            HStack {
-                                Text("Votre Rôle")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.white)
-                                Spacer()
-                                Picker("Rôle", selection: $myRole) {
-                                    ForEach(roles, id: \.self) { role in
-                                        Text(role).tag(role)
-                                    }
-                                }
-                                .pickerStyle(MenuPickerStyle())
-                                .accentColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            }
-                            .padding(10)
-                            .background(Color(red: 0.06, green: 0.08, blue: 0.13))
-                            .cornerRadius(10)
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-
-                            HStack {
-                                Text("Date de naissance")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(.white)
-                                Spacer()
-                                DatePicker("", selection: $myBirthDate, in: ...Date(), displayedComponents: .date)
-                                    .labelsHidden()
-                                    .accentColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            }
-                            .padding(10)
-                            .background(Color(red: 0.06, green: 0.08, blue: 0.13))
-                            .cornerRadius(10)
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-
-                            HStack(spacing: 8) {
-                                inputRow(label: "Pointure", text: $myShoeSize, placeholder: "Ex: 42")
-                                inputRow(label: "Vêtements", text: $myClothingSize, placeholder: "Ex: L, 40")
-                            }
-
-                            inputRow(label: "Péché mignon (optionnel)", text: $myFavouriteTreat, placeholder: "Ex: Tarte Tatin, Marrons...")
-                        }
-                    }
-                    .padding(16)
-                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-                    .padding(.horizontal, 16)
-
-                    // 2. CHOIX : CRÉER OU REJOINDRE UNE TRIBU
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("2. VOTRE ESPACE FAMILIAL")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            .tracking(1)
-
-                        Picker("Choix", selection: $mode) {
-                            Text("Créer une Tribu").tag(0)
-                            Text("Rejoindre ma Tribu").tag(1)
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-
-                        if mode == 0 {
-                            // FORMULAIRE CRÉATION DE TRIBU
-                            VStack(spacing: 10) {
-                                inputRow(label: "Nom de votre Tribu", text: $newTribeName, placeholder: "Ex: Famille Millet")
-                                inputRow(label: "Code Tribu unique souhaité", text: $inputCode, placeholder: "Ex: MILLET-2026")
-                                secureRow(label: "Mot de passe secret de la tribu", text: $inputPassword, placeholder: "Pour sécuriser l'accès privé")
-
-                                Button(action: handleCreateFamily) {
-                                    if isLoading {
-                                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                    } else {
-                                        Text("Créer notre Tribu et Démarrer")
-                                            .font(.system(size: 14, weight: .bold))
-                                    }
-                                }
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .cornerRadius(12)
-                                .disabled(isLoading)
-                            }
-                            .padding(.top, 4)
-                        } else {
-                            // FORMULAIRE REJOINDRE UNE TRIBU
-                            VStack(spacing: 10) {
-                                inputRow(label: "Code Tribu (fourni par votre proche)", text: $inputCode, placeholder: "Ex: MILLET-2026")
-                                secureRow(label: "Mot de passe secret de la tribu", text: $inputPassword, placeholder: "Mot de passe de la famille")
-
-                                Button(action: handleJoinFamily) {
-                                    if isLoading {
-                                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                    } else {
-                                        Text("Rejoindre la Tribu")
-                                            .font(.system(size: 14, weight: .bold))
-                                    }
-                                }
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .cornerRadius(12)
-                                .disabled(isLoading)
-                            }
-                            .padding(.top, 4)
-                        }
-                    }
-                    .padding(16)
-                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-                    .padding(.horizontal, 16)
+                        Text("W")
+                            .font(.system(size: 42, weight: .black, design: .serif))
+                            .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
                     }
 
-                    Spacer().frame(height: 20)
+                    VStack(spacing: 6) {
+                        Text("Willet Family")
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundColor(Color(red: 0.973, green: 0.980, blue: 0.988))
+
+                        Text("Conciergerie privée & espace intime de notre famille")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
                 }
+
+                Spacer()
+
+                // HERO CARTE ACTIONS OFFICIELLES (ZERO FORMULAIRE)
+                VStack(spacing: 16) {
+                    // BADGE REASSURANCE
+                    HStack(spacing: 6) {
+                        Image(systemName: "lock.shield.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 0.063, green: 0.725, blue: 0.506))
+                        Text("Accès sécurisé réservé aux membres de la famille")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Color(red: 0.063, green: 0.725, blue: 0.506))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 0.063, green: 0.725, blue: 0.506).opacity(0.12))
+                    .cornerRadius(20)
+
+                    // BOUTON OFFICIEL SIGN IN WITH APPLE
+                    SignInWithAppleButton(
+                        .continue,
+                        onRequest: { request in
+                            request.requestedScopes = [.fullName, .email]
+                        },
+                        onCompletion: { result in
+                            handleAppleSignInResult(result)
+                        }
+                    )
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 52)
+                    .cornerRadius(14)
+                    .disabled(isLoading)
+
+                    // BOUTON EXPRESS FACE ID
+                    Button(action: handleQuickFaceID) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "faceid")
+                                .font(.system(size: 18, weight: .bold))
+                            Text("Accès Rapide Face ID")
+                                .font(.system(size: 15, weight: .bold))
+                        }
+                        .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(red: 0.071, green: 0.094, blue: 0.149))
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.4), lineWidth: 1)
+                        )
+                    }
+                    .disabled(isLoading)
+
+                    if isLoading {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.961, green: 0.620, blue: 0.043)))
+                            Text("Connexion sécurisée en cours...")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+                        }
+                        .padding(.top, 4)
+                    }
+
+                    Text("Vos informations sont reconnues automatiquement sans mot de passe.")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(red: 0.392, green: 0.455, blue: 0.545))
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 4)
+                }
+                .padding(20)
+                .background(Color(red: 0.071, green: 0.094, blue: 0.149))
+                .cornerRadius(24)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(Color(red: 0.118, green: 0.161, blue: 0.231), lineWidth: 1)
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 36)
             }
         }
-        .alert("Information", isPresented: $showErrorAlert) {
+        .alert("Connexion", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "Une erreur est survenue.")
+            Text(errorMessage ?? "Une erreur est survenue lors de l'authentification.")
         }
     }
 
-    private func inputRow(label: String, text: Binding<String>, placeholder: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.gray)
-            TextField(placeholder, text: text)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Color(red: 0.06, green: 0.08, blue: 0.13))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-        }
-    }
-
-    private func secureRow(label: String, text: Binding<String>, placeholder: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.gray)
-            SecureField(placeholder, text: text)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Color(red: 0.06, green: 0.08, blue: 0.13))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
-        }
-    }
-
-    // MARK: - Handlers Apple Sign In & Face ID
     private func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) {
         switch result {
         case .success(let authorization):
@@ -780,9 +636,7 @@ struct WelcomeAuthView: View {
                         try await storage.loginWithAppleID(
                             appleUserId: appleUserId,
                             fullName: fullName,
-                            email: email,
-                            familyCode: inputCode.isEmpty ? "MILLET-2026" : inputCode,
-                            familyPassword: inputPassword.isEmpty ? "2121.bmw" : inputPassword
+                            email: email
                         )
                         isLoading = false
                     } catch {
@@ -797,7 +651,7 @@ struct WelcomeAuthView: View {
             if authErr?.code == .canceled {
                 return
             }
-            errorMessage = "Connexion Apple ID non aboutie : \(error.localizedDescription). Vous pouvez aussi utiliser le bouton Face ID ou entrer directement vos identifiants ci-dessous."
+            errorMessage = "Connexion Apple ID non aboutie : \(error.localizedDescription)."
             showErrorAlert = true
         }
     }
@@ -807,7 +661,7 @@ struct WelcomeAuthView: View {
         var authError: NSError?
 
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &authError) {
-            let reason = "Authentifiez-vous pour accéder à votre Tribu Famille"
+            let reason = "Authentifiez-vous pour accéder à votre espace Willet Family"
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     if success {
@@ -816,7 +670,7 @@ struct WelcomeAuthView: View {
                         if let laError = evalError as? LAError, laError.code == .userCancel || laError.code == .appCancel {
                             return
                         }
-                        self.errorMessage = "Authentification Face ID non confirmée. Vous pouvez utiliser vos identifiants ci-dessous."
+                        self.errorMessage = "Authentification Face ID non confirmée."
                         self.showErrorAlert = true
                     }
                 }
@@ -839,10 +693,7 @@ struct WelcomeAuthView: View {
         isLoading = true
         Task {
             do {
-                try await storage.quickLoginWithDevice(
-                    familyCode: inputCode.isEmpty ? "MILLET-2026" : inputCode,
-                    familyPassword: inputPassword.isEmpty ? "2121.bmw" : inputPassword
-                )
+                try await storage.quickLoginWithDevice()
                 isLoading = false
             } catch {
                 isLoading = false
@@ -851,89 +702,96 @@ struct WelcomeAuthView: View {
             }
         }
     }
+}
 
-    private func handleCreateFamily() {
-        guard !myName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez renseigner votre prénom."
-            showErrorAlert = true
-            return
-        }
-        guard !newTribeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez renseigner le nom de votre tribu."
-            showErrorAlert = true
-            return
-        }
-        guard !inputCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez choisir un code pour la tribu."
-            showErrorAlert = true
-            return
-        }
-        guard !inputPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez définir un mot de passe secret."
-            showErrorAlert = true
-            return
-        }
+// MARK: - FEUILLE DE CONFIRMATION DE DATE DE NAISSANCE (1 SEULE FOIS)
+struct OnboardingBirthdaySheet: View {
+    @EnvironmentObject var storage: StorageManager
+    @State private var birthDate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+    @State private var role = "Fils"
 
-        isLoading = true
-        Task {
-            do {
-                try await storage.createFamily(
-                    name: newTribeName,
-                    code: inputCode,
-                    password: inputPassword,
-                    creatorName: myName,
-                    creatorRole: myRole,
-                    birthDate: myBirthDate,
-                    shoeSize: myShoeSize.isEmpty ? nil : myShoeSize,
-                    clothingSize: myClothingSize.isEmpty ? nil : myClothingSize,
-                    favouriteTreat: myFavouriteTreat.isEmpty ? nil : myFavouriteTreat,
-                    phone: myPhone.isEmpty ? nil : myPhone
-                )
-                isLoading = false
-            } catch {
-                isLoading = false
-                errorMessage = error.localizedDescription
-                showErrorAlert = true
-            }
-        }
-    }
+    private let roles = ["Fils", "Fille", "Père", "Mère", "Grand-mère", "Grand-père", "Tante", "Oncle", "Cousin", "Cousine"]
 
-    private func handleJoinFamily() {
-        guard !myName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez renseigner votre prénom."
-            showErrorAlert = true
-            return
-        }
-        guard !inputCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez renseigner le code de la tribu."
-            showErrorAlert = true
-            return
-        }
-        guard !inputPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Veuillez renseigner le mot de passe secret."
-            showErrorAlert = true
-            return
-        }
+    var body: some View {
+        ZStack {
+            Color(red: 0.071, green: 0.094, blue: 0.149).ignoresSafeArea()
 
-        isLoading = true
-        Task {
-            do {
-                try await storage.joinFamily(
-                    code: inputCode,
-                    password: inputPassword,
-                    userName: myName,
-                    userRole: myRole,
-                    birthDate: myBirthDate,
-                    shoeSize: myShoeSize.isEmpty ? nil : myShoeSize,
-                    clothingSize: myClothingSize.isEmpty ? nil : myClothingSize,
-                    favouriteTreat: myFavouriteTreat.isEmpty ? nil : myFavouriteTreat,
-                    phone: myPhone.isEmpty ? nil : myPhone
-                )
-                isLoading = false
-            } catch {
-                isLoading = false
-                errorMessage = error.localizedDescription
-                showErrorAlert = true
+            VStack(spacing: 20) {
+                // Crest
+                ZStack {
+                    Circle()
+                        .fill(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.15))
+                        .frame(width: 60, height: 60)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 26))
+                        .foregroundColor(Color(red: 0.961, green: 0.620, blue: 0.043))
+                }
+                .padding(.top, 16)
+
+                VStack(spacing: 4) {
+                    Text("Bienvenue dans la Tribu, \(storage.currentMember?.name ?? "Marc") !")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+
+                    Text("Pour configurer vos alertes d'anniversaires et les surprises de la famille :")
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+
+                VStack(spacing: 14) {
+                    // Rôle
+                    HStack {
+                        Text("Mon Rôle")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                        Spacer()
+                        Picker("Rôle", selection: $role) {
+                            ForEach(roles, id: \.self) { r in
+                                Text(r).tag(r)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .accentColor(Color(red: 0.961, green: 0.620, blue: 0.043))
+                    }
+                    .padding(12)
+                    .background(Color(red: 0.043, green: 0.059, blue: 0.098))
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(red: 0.118, green: 0.161, blue: 0.231), lineWidth: 1))
+
+                    // Date de naissance
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Date de naissance")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(red: 0.580, green: 0.643, blue: 0.722))
+
+                        DatePicker("", selection: $birthDate, in: ...Date(), displayedComponents: .date)
+                            .datePickerStyle(WheelDatePickerStyle())
+                            .labelsHidden()
+                            .frame(maxHeight: 140)
+                            .clipped()
+                    }
+                    .padding(12)
+                    .background(Color(red: 0.043, green: 0.059, blue: 0.098))
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(red: 0.118, green: 0.161, blue: 0.231), lineWidth: 1))
+                }
+                .padding(.horizontal, 16)
+
+                Button(action: {
+                    storage.completeOnboardingProfile(birthDate: birthDate, role: role)
+                }) {
+                    Text("Valider et Accéder à ma Famille")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(red: 0.961, green: 0.620, blue: 0.043))
+                        .cornerRadius(14)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
         }
     }

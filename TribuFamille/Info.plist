@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>fr</string>
     <key>CFBundleDisplayName</key>
-    <string>Tribu Famille</string>
+    <string>Willet Family</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -19,7 +19,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleVersion</key>
-    <string>14</string>
+    <string>15</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIRequiresFullScreen</key>
@@ -29,7 +29,9 @@
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Tribu accède à vos photos pour partager vos souvenirs avec la famille.</string>
     <key>NSFaceIDUsageDescription</key>
-    <string>Tribu Famille utilise Face ID pour sécuriser l'accès à votre espace familial et vous connecter instantanément.</string>
+    <string>Willet Family utilise Face ID pour sécuriser l'accès à votre espace familial et vous connecter instantanément.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Willet Family accède à vos contacts pour retrouver automatiquement les dates d'anniversaires de vos proches.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIRequiredDeviceCapabilities</key>

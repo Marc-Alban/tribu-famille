@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import Contacts
 
 @MainActor
 class StorageManager: ObservableObject {
@@ -22,6 +23,7 @@ class StorageManager: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var isSyncing: Bool = false
     @Published var syncError: String? = nil
+    @Published var showOnboardingBirthdaySheet: Bool = false
 
     private let membersFile = "tribu_members.json"
     private let eventsFile = "tribu_events.json"
@@ -214,17 +216,19 @@ class StorageManager: ObservableObject {
             UserDefaults.standard.set(email, forKey: "tribu_apple_email")
         }
 
+        let contactsBirthday = attemptFetchBirthdayFromContacts(for: resolvedName)
+
         var payload = try? await CloudSyncService.shared.fetchFamily(code: targetCode)
         if payload == nil {
             let creator = Member(
                 name: resolvedName,
-                role: "Père",
-                birthDate: Calendar.current.date(byAdding: .year, value: -28, to: Date()) ?? Date(),
+                role: "Fils",
+                birthDate: contactsBirthday ?? Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date(),
                 appleUserId: appleUserId,
                 appleEmail: email
             )
             payload = try await CloudSyncService.shared.createFamily(
-                name: "Famille \(resolvedName)",
+                name: "Willet Family",
                 code: targetCode,
                 password: targetPassword,
                 creator: creator
@@ -247,15 +251,18 @@ class StorageManager: ObservableObject {
             me = existing
             if me.appleUserId == nil {
                 me.appleUserId = appleUserId
-                if let idx = currentPayload.members.firstIndex(where: { $0.id == me.id }) {
-                    currentPayload.members[idx] = me
-                }
+            }
+            if let bday = contactsBirthday, Calendar.current.isDateInToday(me.birthDate) {
+                me.birthDate = bday
+            }
+            if let idx = currentPayload.members.firstIndex(where: { $0.id == me.id }) {
+                currentPayload.members[idx] = me
             }
         } else {
             me = Member(
                 name: resolvedName,
-                role: "Membre",
-                birthDate: Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date(),
+                role: "Fils",
+                birthDate: contactsBirthday ?? Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date(),
                 appleUserId: appleUserId,
                 appleEmail: email
             )
@@ -265,7 +272,7 @@ class StorageManager: ObservableObject {
 
         self.currentMember = me
         self.tribeCode = currentPayload.code
-        self.tribeName = currentPayload.name
+        self.tribeName = currentPayload.name.isEmpty ? "Willet Family" : currentPayload.name
         self.tribePassword = currentPayload.password
         self.members = currentPayload.members
         self.events = currentPayload.events
@@ -277,6 +284,39 @@ class StorageManager: ObservableObject {
         saveSession()
         saveAllLocalDataInternal()
         NotificationManager.shared.scheduleBirthdayNotifications(for: self.members)
+
+        let isPlaceholderDate = Calendar.current.isDateInToday(me.birthDate)
+        let hasCustomizedBirthday = UserDefaults.standard.bool(forKey: "tribu_has_set_bday_\(me.id)")
+        if isPlaceholderDate && !hasCustomizedBirthday && contactsBirthday == nil {
+            self.showOnboardingBirthdaySheet = true
+        }
+    }
+
+    func completeOnboardingProfile(birthDate: Date, role: String) {
+        guard var current = currentMember else { return }
+        current.birthDate = birthDate
+        current.role = role
+        UserDefaults.standard.set(true, forKey: "tribu_has_set_bday_\(current.id)")
+        self.currentMember = current
+        if let idx = members.firstIndex(where: { $0.id == current.id }) {
+            members[idx] = current
+        }
+        self.showOnboardingBirthdaySheet = false
+        saveSession()
+        saveMembers()
+    }
+
+    func attemptFetchBirthdayFromContacts(for name: String) -> Date? {
+        let store = CNContactStore()
+        let status = CNContactStore.authorizationStatus(for: .contacts)
+        guard status == .authorized else { return nil }
+
+        let keys = [CNContactBirthdayKey as CNKeyDescriptor, CNContactGivenNameKey as CNKeyDescriptor, CNContactFamilyNameKey as CNKeyDescriptor]
+        let predicate = CNContact.predicateForContacts(matchingName: name)
+        if let list = try? store.unifiedContacts(matching: predicate, keysToFetch: keys), let first = list.first, let dc = first.birthday {
+            return Calendar.current.date(from: dc)
+        }
+        return nil
     }
 
     // MARK: - Connexion Express iPhone / Face ID
