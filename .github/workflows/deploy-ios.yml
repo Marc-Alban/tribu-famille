@@ -177,3 +177,37 @@ jobs:
               -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
               -d "text=$MSG"
           fi
+
+  distribute-testflight:
+    needs: build-and-deploy
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Installer pyjwt & cryptography
+        run: pip install pyjwt cryptography
+
+      - name: 📲 Distribution automatique TestFlight & Notification testeurs
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          APP_BUNDLE_ID: "fr.tribufamille.app"
+        run: python scripts/distribute_testflight.py
+
+      - name: 🔔 Alerte Telegram Distribution
+        if: always()
+        run: |
+          MSG="📲 Tribu Famille iOS : Le nouveau build est VALIDÉ par Apple et DISTRIBUÉ à tous les testeurs sur TestFlight avec notifications automatiques activées !"
+          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+              -d "text=$MSG"
+          fi
