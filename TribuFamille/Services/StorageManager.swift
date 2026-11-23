@@ -34,7 +34,7 @@ class StorageManager: ObservableObject {
     func selectMember(_ member: Member) {
         self.currentMember = member
         self.isLoggedIn = true
-        UserDefaults.standard.set(member.id.uuidString, forKey: currentMemberIdKey)
+        UserDefaults.standard.set(member.id, forKey: currentMemberIdKey)
     }
 
     func logout() {
@@ -45,8 +45,7 @@ class StorageManager: ObservableObject {
 
     private func restoreCurrentMember() {
         if let savedId = UserDefaults.standard.string(forKey: currentMemberIdKey),
-           let uuid = UUID(uuidString: savedId),
-           let found = members.first(where: { $0.id == uuid }) {
+           let found = members.first(where: { $0.id == savedId }) {
             self.currentMember = found
             self.isLoggedIn = true
         } else if let first = members.first(where: { $0.name.contains("Marc-Alban") || $0.name.contains("Papa") }) {
