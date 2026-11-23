@@ -331,25 +331,29 @@ struct ShoppingView: View {
             .navigationBarItems(
                 leading: Button("Annuler") { showAddModal = false }
                     .foregroundColor(.gray),
-                trailing: Button("Ajouter") {
-                    guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let author = storage.currentMember?.name ?? "Moi"
-                    let item = ShoppingItem(
-                        name: newName.trimmingCharacters(in: .whitespaces),
-                        category: newCategory,
-                        quantity: newQty.isEmpty ? nil : newQty,
-                        addedByName: author
-                    )
-                    storage.shoppingItems.append(item)
-                    storage.saveShopping()
-                    newName = ""
-                    newQty = ""
-                    showAddModal = false
+                trailing: Button(action: addShoppingItem) {
+                    Text("Ajouter")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        .font(.system(size: 16, weight: .bold))
                 }
-                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                .font(.system(size: 16, weight: .bold))
             )
         }
+    }
+
+    private func addShoppingItem() {
+        guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let author = storage.currentMember?.name ?? "Moi"
+        let item = ShoppingItem(
+            name: newName.trimmingCharacters(in: .whitespaces),
+            category: newCategory,
+            quantity: newQty.isEmpty ? nil : newQty,
+            addedByName: author
+        )
+        storage.shoppingItems.append(item)
+        storage.saveShopping()
+        newName = ""
+        newQty = ""
+        showAddModal = false
     }
 
     private func toggleShopping(item: ShoppingItem) {

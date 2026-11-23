@@ -248,21 +248,26 @@ struct BirthdaysView: View {
             .navigationTitle("Nouveau Membre")
             .navigationBarItems(
                 leading: Button("Annuler") { showAddModal = false },
-                trailing: Button("Ajouter") {
-                    guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let member = Member(
-                        name: newName,
-                        role: newRole,
-                        birthDate: newBirthDate,
-                        phone: newPhone.isEmpty ? nil : newPhone,
-                        allergies: newAllergies.isEmpty ? nil : newAllergies,
-                        isChild: isChild
-                    )
-                    storage.addMember(member)
-                    showAddModal = false
+                trailing: Button(action: addMember) {
+                    Text("Ajouter")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                 }
             )
         }
+    }
+
+    private func addMember() {
+        guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let member = Member(
+            name: newName,
+            role: newRole,
+            birthDate: newBirthDate,
+            phone: newPhone.isEmpty ? nil : newPhone,
+            allergies: newAllergies.isEmpty ? nil : newAllergies,
+            isChild: isChild
+        )
+        storage.addMember(member)
+        showAddModal = false
     }
 
     private func sendWishMessage(for member: Member) {

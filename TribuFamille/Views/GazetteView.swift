@@ -434,24 +434,28 @@ struct GazetteView: View {
             .navigationBarItems(
                 leading: Button("Annuler") { showAddQuoteModal = false }
                     .foregroundColor(.gray),
-                trailing: Button("Garder") {
-                    guard !newQuoteText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let quote = FamilyQuote(
-                        quoteText: newQuoteText.trimmingCharacters(in: .whitespaces),
-                        authorName: newQuoteAuthor.isEmpty ? "Famille" : newQuoteAuthor,
-                        context: newQuoteContext.isEmpty ? "Au repas de famille" : newQuoteContext,
-                        dateString: "Aujourd'hui"
-                    )
-                    storage.quotes.insert(quote, at: 0)
-                    storage.saveQuotes()
-                    newQuoteText = ""
-                    newQuoteAuthor = ""
-                    newQuoteContext = ""
-                    showAddQuoteModal = false
+                trailing: Button(action: addQuote) {
+                    Text("Garder")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        .font(.system(size: 16, weight: .bold))
                 }
-                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                .font(.system(size: 16, weight: .bold))
             )
         }
+    }
+
+    private func addQuote() {
+        guard !newQuoteText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let quote = FamilyQuote(
+            quoteText: newQuoteText.trimmingCharacters(in: .whitespaces),
+            authorName: newQuoteAuthor.isEmpty ? "Famille" : newQuoteAuthor,
+            context: newQuoteContext.isEmpty ? "Au repas de famille" : newQuoteContext,
+            dateString: "Aujourd'hui"
+        )
+        storage.quotes.insert(quote, at: 0)
+        storage.saveQuotes()
+        newQuoteText = ""
+        newQuoteAuthor = ""
+        newQuoteContext = ""
+        showAddQuoteModal = false
     }
 }

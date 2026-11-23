@@ -215,26 +215,30 @@ struct WishlistView: View {
             .navigationBarItems(
                 leading: Button("Annuler") { showAddWishModal = false }
                     .foregroundColor(.gray),
-                trailing: Button("Ajouter") {
-                    guard let member = targetMember, !newWishTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    if let idx = storage.members.firstIndex(where: { $0.id == member.id }) {
-                        let item = WishlistItem(
-                            title: newWishTitle.trimmingCharacters(in: .whitespaces),
-                            priceEstimate: newWishPrice.isEmpty ? nil : newWishPrice,
-                            link: nil,
-                            isReservedBy: nil
-                        )
-                        storage.members[idx].wishlist.append(item)
-                        storage.saveMembers()
-                    }
-                    newWishTitle = ""
-                    newWishPrice = ""
-                    showAddWishModal = false
+                trailing: Button(action: addWish) {
+                    Text("Ajouter")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        .font(.system(size: 16, weight: .bold))
                 }
-                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                .font(.system(size: 16, weight: .bold))
             )
         }
+    }
+
+    private func addWish() {
+        guard let member = targetMember, !newWishTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        if let idx = storage.members.firstIndex(where: { $0.id == member.id }) {
+            let item = WishlistItem(
+                title: newWishTitle.trimmingCharacters(in: .whitespaces),
+                priceEstimate: newWishPrice.isEmpty ? nil : newWishPrice,
+                link: nil,
+                isReservedBy: nil
+            )
+            storage.members[idx].wishlist.append(item)
+            storage.saveMembers()
+        }
+        newWishTitle = ""
+        newWishPrice = ""
+        showAddWishModal = false
     }
 
     private func toggleReservation(member: Member, wish: WishlistItem) {

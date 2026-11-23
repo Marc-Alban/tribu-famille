@@ -395,20 +395,24 @@ struct EventsView: View {
             .navigationTitle("Proposer au Repas")
             .navigationBarItems(
                 leading: Button("Annuler") { showAddItemModal = false },
-                trailing: Button("Ajouter") {
-                    guard !newItemTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    if let firstIndex = storage.events.indices.first {
-                        let myName = storage.currentMember?.name ?? "Moi"
-                        let item = EventTaskItem(title: newItemTitle, category: newItemCategory, assignedToName: myName, isCompleted: true)
-                        storage.events[firstIndex].items.append(item)
-                        storage.saveEvents()
-                    }
-                    newItemTitle = ""
-                    showAddItemModal = false
+                trailing: Button(action: addMealItem) {
+                    Text("Ajouter")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                 }
-                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
             )
         }
+    }
+
+    private func addMealItem() {
+        guard !newItemTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        if let firstIndex = storage.events.indices.first {
+            let myName = storage.currentMember?.name ?? "Moi"
+            let item = EventTaskItem(title: newItemTitle, category: newItemCategory, assignedToName: myName, isCompleted: true)
+            storage.events[firstIndex].items.append(item)
+            storage.saveEvents()
+        }
+        newItemTitle = ""
+        showAddItemModal = false
     }
 
     private var addEventSheet: some View {
@@ -434,23 +438,27 @@ struct EventsView: View {
             .navigationTitle("Nouvel Événement")
             .navigationBarItems(
                 leading: Button("Annuler") { showAddEventModal = false },
-                trailing: Button("Créer") {
-                    guard !newEventTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let event = FamilyEvent(
-                        title: newEventTitle,
-                        date: newEventDate,
-                        location: newEventLocation.isEmpty ? "Maison" : newEventLocation,
-                        description: "Événement partagé avec toute la tribu.",
-                        category: newEventCategory
-                    )
-                    storage.events.append(event)
-                    storage.saveEvents()
-                    newEventTitle = ""
-                    showAddEventModal = false
+                trailing: Button(action: addNewEvent) {
+                    Text("Créer")
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                 }
-                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
             )
         }
+    }
+
+    private func addNewEvent() {
+        guard !newEventTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let event = FamilyEvent(
+            title: newEventTitle,
+            date: newEventDate,
+            location: newEventLocation.isEmpty ? "Maison" : newEventLocation,
+            description: "Événement partagé avec toute la tribu.",
+            category: newEventCategory
+        )
+        storage.events.append(event)
+        storage.saveEvents()
+        newEventTitle = ""
+        showAddEventModal = false
     }
 
     private func toggleItem(event: FamilyEvent, item: EventTaskItem) {
