@@ -221,77 +221,7 @@ struct BirthdaysView: View {
                     )
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 24)
-                                .frame(width: 44, height: 44)
-                            Text(String(member.name.prefix(1)))
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack(spacing: 6) {
-                                Text(member.name)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
-
-                                if member.isChild {
-                                    Text("Enfant")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(.orange)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.orange.opacity(0.15))
-                                        .cornerRadius(6)
-                                }
-                            }
-
-                            Text("\(member.role) • Aura \(member.nextAge) ans")
-                                .font(.system(size: 12))
-                                .foregroundColor(.gray)
-
-                            if let allergies = member.allergies, !allergies.isEmpty {
-                                Text("⚠️ \(allergies)")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.red)
-                            }
-                        }
-
-                        Spacer()
-
-                        VStack(spacing: 2) {
-                            Text("\(member.daysUntilBirthday)")
-                                .font(.system(size: 16, weight: .heavy))
-                                .foregroundColor(Color(red: 0.65, green: 0.71, blue: 0.99))
-                            Text("JOURS")
-                                .font(.system(size: 8, weight: .black))
-                                .foregroundColor(.gray)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
-                        .background(Color(red: 0.06, green: 0.09, blue: 0.16))
-                        .cornerRadius(10)
-
-                        Button(action: {
-                            sendWishMessage(for: member)
-                        }) {
-                            Image(systemName: "phone.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.white)
-                                .frame(width: 34, height: 34)
-                                .background(Color(red: 0.19, green: 0.18, blue: 0.51))
-                                .clipShape(Circle())
-                        }
-                    }
-                    .padding(14)
-                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
-                    )
-                }
             }
-            .padding(.horizontal, 16)
             .padding(.bottom, 40)
         }
         .sheet(isPresented: $showAddModal) {
