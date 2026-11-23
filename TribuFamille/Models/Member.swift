@@ -101,7 +101,7 @@ struct Member: Identifiable, Codable, Equatable {
             return now
         }
 
-        if birthdayThisYear < now {
+        if calendar.startOfDay(for: birthdayThisYear) < calendar.startOfDay(for: now) {
             components.year = currentYear + 1
             return calendar.date(from: components) ?? now
         }

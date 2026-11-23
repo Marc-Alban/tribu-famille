@@ -234,6 +234,7 @@ struct UserProfileSheet: View {
     @State private var editClothingSize = ""
     @State private var editFavouriteTreat = ""
     @State private var showLogoutConfirm = false
+    @State private var showDeleteAccountConfirm = false
     @State private var showShareModal = false
 
     private let rolesList = ["Père", "Mère", "Fils", "Fille", "Grand-mère", "Grand-père", "Tante", "Oncle", "Cousin", "Cousine", "Ami(e)"]
@@ -420,6 +421,23 @@ struct UserProfileSheet: View {
                                 Text("Se déconnecter de ce profil")
                             }
                             .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.12))
+                            .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 16)
+
+                        // BOUTON SUPPRESSION DE COMPTE & RGPD (APPLE GUIDELINE 5.1.1)
+                        Button(action: {
+                            showDeleteAccountConfirm = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "trash.fill")
+                                Text("Supprimer mon compte et mes données")
+                            }
+                            .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.red)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -444,6 +462,15 @@ struct UserProfileSheet: View {
                 }
             } message: {
                 Text("Vous pourrez vous reconnecter à tout moment avec votre identité et les codes de votre tribu.")
+            }
+            .alert("Supprimer définitivement votre compte", isPresented: $showDeleteAccountConfirm) {
+                Button("Annuler", role: .cancel) {}
+                Button("Supprimer", role: .destructive) {
+                    storage.deleteCurrentAccount()
+                    presentationMode.wrappedValue.dismiss()
+                }
+            } message: {
+                Text("Conformément au RGPD et aux règles Apple, votre profil et toutes vos données associées seront définitivement supprimés.")
             }
         }
     }

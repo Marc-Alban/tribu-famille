@@ -25,9 +25,9 @@
     <key>UIRequiresFullScreen</key>
     <true/>
     <key>NSCameraUsageDescription</key>
-    <string>Tribu a besoin de l'appareil photo pour ajouter des photos au journal de famille.</string>
+    <string>Willet Family utilise l'appareil photo pour ajouter des photos et souvenirs au journal de famille.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Tribu accède à vos photos pour partager vos souvenirs avec la famille.</string>
+    <string>Willet Family accède à vos photos pour partager vos souvenirs précieux avec la famille.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Willet Family utilise Face ID pour sécuriser l'accès à votre espace familial et vous connecter instantanément.</string>
     <key>NSContactsUsageDescription</key>

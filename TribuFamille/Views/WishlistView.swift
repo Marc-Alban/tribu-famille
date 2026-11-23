@@ -153,6 +153,9 @@ struct WishlistView: View {
                                 .italic()
                                 .padding(.vertical, 4)
                         } else {
+                            let isCurrentMember = (member.id == storage.currentMember?.id)
+                            let myName = storage.currentMember?.name ?? "Moi"
+
                             VStack(spacing: 8) {
                                 ForEach(member.wishlist) { wish in
                                     HStack(spacing: 10) {
@@ -168,8 +171,10 @@ struct WishlistView: View {
                                                         .foregroundColor(Color(red: 0.06, green: 0.72, blue: 0.50))
                                                 }
 
-                                                if let reserved = wish.isReservedBy {
-                                                    Text("🔒 Réservé par \(reserved)")
+                                                // ANTI-SPOILER : On masque la réservation si le membre regarde sa propre liste
+                                                if !isCurrentMember, let reserved = wish.isReservedBy {
+                                                    let isMine = (reserved == myName)
+                                                    Text(isMine ? "🔒 Réservé par vous" : "🔒 Déjà réservé par \(reserved)")
                                                         .font(.system(size: 10, weight: .bold))
                                                         .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                                                 }
@@ -178,32 +183,49 @@ struct WishlistView: View {
 
                                         Spacer()
 
-                                        Button(action: {
-                                            toggleReservation(member: member, wish: wish)
-                                        }) {
-                                            if let _ = wish.isReservedBy {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "checkmark")
-                                                    Text("Réservé")
-                                                }
-                                                .font(.system(size: 11, weight: .bold))
-                                                .foregroundColor(.black)
-                                                .padding(.horizontal, 10)
-                                                .padding(.vertical, 6)
-                                                .background(Color(red: 0.06, green: 0.72, blue: 0.50))
-                                                .cornerRadius(8)
-                                            } else {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "gift")
-                                                    Text("Je prends")
-                                                }
-                                                .font(.system(size: 11, weight: .bold))
-                                                .foregroundColor(.black)
-                                                .padding(.horizontal, 10)
-                                                .padding(.vertical, 6)
-                                                .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                                .cornerRadius(8)
+                                        if isCurrentMember {
+                                            // VUE PROPRE LISTE : Pas de bouton réserver (Anti-Spoiler total)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "sparkles")
+                                                Text("Mon souhait")
                                             }
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(Color(red: 0.58, green: 0.64, blue: 0.72))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.white.opacity(0.06))
+                                            .cornerRadius(8)
+                                        } else {
+                                            // VUE LISTE D'UN PROCHE : Bouton de réservation secrète
+                                            Button(action: {
+                                                toggleReservation(member: member, wish: wish)
+                                            }) {
+                                                if let reserved = wish.isReservedBy {
+                                                    let isMine = (reserved == myName)
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: isMine ? "checkmark" : "lock.fill")
+                                                        Text(isMine ? "Réservé" : "Déjà pris")
+                                                    }
+                                                    .font(.system(size: 11, weight: .bold))
+                                                    .foregroundColor(isMine ? .black : Color(red: 0.58, green: 0.64, blue: 0.72))
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 6)
+                                                    .background(isMine ? Color(red: 0.06, green: 0.72, blue: 0.50) : Color.white.opacity(0.08))
+                                                    .cornerRadius(8)
+                                                } else {
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: "gift")
+                                                        Text("Je prends")
+                                                    }
+                                                    .font(.system(size: 11, weight: .bold))
+                                                    .foregroundColor(.black)
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 6)
+                                                    .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                                    .cornerRadius(8)
+                                                }
+                                            }
+                                            .disabled(wish.isReservedBy != nil && wish.isReservedBy != myName)
                                         }
                                     }
                                     .padding(10)

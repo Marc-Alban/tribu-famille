@@ -47,20 +47,20 @@ class NotificationManager: ObservableObject {
             let requestDayJ = UNNotificationRequest(identifier: "bday_\(member.id)_j0", content: contentDayJ, trigger: triggerDayJ)
             UNUserNotificationCenter.current().add(requestDayJ)
 
-            // 2. Notification J-7 (7 jours avant)
-            if let jMinus7 = Calendar.current.date(byAdding: .day, value: -7, to: nextDate), jMinus7 > Date() {
-                var compJ7 = Calendar.current.dateComponents([.year, .month, .day], from: jMinus7)
-                compJ7.hour = 9
-                compJ7.minute = 0
+            // 2. Notification J-3 (3 jours avant - Conforme Bannière UI)
+            if let jMinus3 = Calendar.current.date(byAdding: .day, value: -3, to: nextDate), jMinus3 > Date() {
+                var compJ3 = Calendar.current.dateComponents([.year, .month, .day], from: jMinus3)
+                compJ3.hour = 9
+                compJ3.minute = 0
 
-                let contentJ7 = UNMutableNotificationContent()
-                contentJ7.title = "🎁 Anniversaire de \(member.name) dans 7 jours"
-                contentJ7.body = "\(member.name) aura bientôt \(member.nextAge) ans. As-tu pensé à son cadeau ?"
-                contentJ7.sound = .default
+                let contentJ3 = UNMutableNotificationContent()
+                contentJ3.title = "🎁 Anniversaire de \(member.name) dans 3 jours !"
+                contentJ3.body = "\(member.name) aura bientôt \(member.nextAge) ans. As-tu pensé à son cadeau ?"
+                contentJ3.sound = .default
 
-                let triggerJ7 = UNCalendarNotificationTrigger(dateMatching: compJ7, repeats: false)
-                let requestJ7 = UNNotificationRequest(identifier: "bday_\(member.id)_j7", content: contentJ7, trigger: triggerJ7)
-                UNUserNotificationCenter.current().add(requestJ7)
+                let triggerJ3 = UNCalendarNotificationTrigger(dateMatching: compJ3, repeats: false)
+                let requestJ3 = UNNotificationRequest(identifier: "bday_\(member.id)_j3", content: contentJ3, trigger: triggerJ3)
+                UNUserNotificationCenter.current().add(requestJ3)
             }
         }
     }

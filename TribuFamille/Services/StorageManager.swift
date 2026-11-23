@@ -129,6 +129,15 @@ class StorageManager: ObservableObject {
         deleteLocalData()
     }
 
+    // MARK: - Suppression de Compte & Droit à l'oubli (Apple Guideline 5.1.1 & RGPD)
+    func deleteCurrentAccount() {
+        if let current = currentMember {
+            members.removeAll(where: { $0.id == current.id })
+            saveMembers()
+        }
+        logout()
+    }
+
     // MARK: - Onboarding : Créer une Tribu
     func createFamily(
         name: String,
