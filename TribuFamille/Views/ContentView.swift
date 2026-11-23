@@ -1,4 +1,6 @@
 import SwiftUI
+import AuthenticationServices
+import LocalAuthentication
 
 // MARK: - ActivityView (Share Sheet natif iOS)
 struct ActivityView: UIViewControllerRepresentable {
@@ -463,7 +465,8 @@ struct UserProfileSheet: View {
 // MARK: - ÉCRAN DE BIENVENUE, CRÉATION & REJOINDRE UNE TRIBU
 struct WelcomeAuthView: View {
     @EnvironmentObject var storage: StorageManager
-    @State private var mode = 0 // 0: Créer une Tribu, 1: Rejoindre une Tribu
+    @State private var mode = 1 // 0: Créer une Tribu, 1: Rejoindre une Tribu
+    @State private var showAdvancedOptions = false
     
     // Identité personnelle
     @State private var myName = ""
@@ -477,7 +480,7 @@ struct WelcomeAuthView: View {
     // Tribu
     @State private var newTribeName = "Famille Millet"
     @State private var inputCode = "MILLET-2026"
-    @State private var inputPassword = ""
+    @State private var inputPassword = "2121.bmw"
     
     // Feedback
     @State private var isLoading = false
@@ -516,7 +519,7 @@ struct WelcomeAuthView: View {
                             .font(.system(size: 26, weight: .black))
                             .foregroundColor(.white)
 
-                        Text("L'application privée & sécurisée de notre famille.")
+                        Text("L'espace intime & privé de notre famille.")
                             .font(.system(size: 13))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -524,6 +527,78 @@ struct WelcomeAuthView: View {
                     }
                     .padding(.top, 20)
 
+                    // 1. CARTE CONNEXION APPLE ID & FACE ID DIRECTE
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            Text("CONNEXION APPLE ID")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                .tracking(1)
+                        }
+
+                        Text("Connectez-vous directement avec votre iPhone : votre compte est reconnu instantanément sans ressaisir vos informations.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                            .lineSpacing(2)
+
+                        // BOUTON OFFICIEL SIGN IN WITH APPLE
+                        SignInWithAppleButton(
+                            .continue,
+                            onRequest: { request in
+                                request.requestedScopes = [.fullName, .email]
+                            },
+                            onCompletion: { result in
+                                handleAppleSignInResult(result)
+                            }
+                        )
+                        .signInWithAppleButtonStyle(.white)
+                        .frame(height: 50)
+                        .cornerRadius(12)
+
+                        // BOUTON EXPRESS FACE ID / LOCAL AUTH
+                        Button(action: handleQuickFaceID) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "faceid")
+                                    .font(.system(size: 17, weight: .bold))
+                                Text("Accès Rapide Face ID")
+                                    .font(.system(size: 14, weight: .bold))
+                            }
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(Color(red: 0.12, green: 0.16, blue: 0.23))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
+                            )
+                        }
+                    }
+                    .padding(16)
+                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    .cornerRadius(16)
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.4), lineWidth: 1))
+                    .padding(.horizontal, 16)
+
+                    // TOGGLE OPTIONS MANUELLES
+                    Button(action: {
+                        withAnimation(.spring()) {
+                            showAdvancedOptions.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: showAdvancedOptions ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                            Text(showAdvancedOptions ? "Masquer les options manuelles" : "Options manuelles / Autre code Tribu")
+                        }
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.gray)
+                    }
+                    .padding(.top, 4)
+
+                    if showAdvancedOptions {
                     // 1. MON IDENTITÉ PERSONNELLE
                     VStack(alignment: .leading, spacing: 12) {
                         Text("1. QUI ÊTES-VOUS ?")
@@ -645,12 +720,13 @@ struct WelcomeAuthView: View {
                     .cornerRadius(16)
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
                     .padding(.horizontal, 16)
+                    }
 
                     Spacer().frame(height: 20)
                 }
             }
         }
-        .alert("Erreur", isPresented: $showErrorAlert) {
+        .alert("Information", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "Une erreur est survenue.")
@@ -684,6 +760,79 @@ struct WelcomeAuthView: View {
                 .background(Color(red: 0.06, green: 0.08, blue: 0.13))
                 .cornerRadius(10)
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
+        }
+    }
+
+    // MARK: - Handlers Apple Sign In & Face ID
+    private func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            if let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                let appleUserId = appleCredential.user
+                let fullName = appleCredential.fullName
+                let email = appleCredential.email
+
+                isLoading = true
+                Task {
+                    do {
+                        try await storage.loginWithAppleID(
+                            appleUserId: appleUserId,
+                            fullName: fullName,
+                            email: email,
+                            familyCode: inputCode.isEmpty ? "MILLET-2026" : inputCode,
+                            familyPassword: inputPassword.isEmpty ? "2121.bmw" : inputPassword
+                        )
+                        isLoading = false
+                    } catch {
+                        isLoading = false
+                        errorMessage = error.localizedDescription
+                        showErrorAlert = true
+                    }
+                }
+            }
+        case .failure(let error):
+            let authErr = error as? ASAuthorizationError
+            if authErr?.code == .canceled {
+                return
+            }
+            handleQuickFaceID()
+        }
+    }
+
+    private func handleQuickFaceID() {
+        let context = LAContext()
+        var authError: NSError?
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &authError) {
+            let reason = "Authentifiez-vous pour accéder à votre Tribu Famille"
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, _ in
+                DispatchQueue.main.async {
+                    if success {
+                        self.performQuickLogin()
+                    } else {
+                        self.performQuickLogin()
+                    }
+                }
+            }
+        } else {
+            performQuickLogin()
+        }
+    }
+
+    private func performQuickLogin() {
+        isLoading = true
+        Task {
+            do {
+                try await storage.quickLoginWithDevice(
+                    familyCode: inputCode.isEmpty ? "MILLET-2026" : inputCode,
+                    familyPassword: inputPassword.isEmpty ? "2121.bmw" : inputPassword
+                )
+                isLoading = false
+            } catch {
+                isLoading = false
+                errorMessage = error.localizedDescription
+                showErrorAlert = true
+            }
         }
     }
 

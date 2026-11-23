@@ -19,9 +19,11 @@ struct Member: Identifiable, Codable, Equatable {
     var shoeSize: String? = nil
     var clothingSize: String? = nil
     var favouriteTreat: String? = nil
+    var appleUserId: String? = nil
+    var appleEmail: String? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, name, role, birthDate, phone, allergies, isChild, wishlist, shoeSize, clothingSize, favouriteTreat
+        case id, name, role, birthDate, phone, allergies, isChild, wishlist, shoeSize, clothingSize, favouriteTreat, appleUserId, appleEmail
     }
 
     init(
@@ -35,7 +37,9 @@ struct Member: Identifiable, Codable, Equatable {
         wishlist: [WishlistItem] = [],
         shoeSize: String? = nil,
         clothingSize: String? = nil,
-        favouriteTreat: String? = nil
+        favouriteTreat: String? = nil,
+        appleUserId: String? = nil,
+        appleEmail: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -48,6 +52,8 @@ struct Member: Identifiable, Codable, Equatable {
         self.shoeSize = shoeSize
         self.clothingSize = clothingSize
         self.favouriteTreat = favouriteTreat
+        self.appleUserId = appleUserId
+        self.appleEmail = appleEmail
     }
 
     init(from decoder: Decoder) throws {
@@ -63,6 +69,8 @@ struct Member: Identifiable, Codable, Equatable {
         self.shoeSize = try container.decodeIfPresent(String.self, forKey: .shoeSize)
         self.clothingSize = try container.decodeIfPresent(String.self, forKey: .clothingSize)
         self.favouriteTreat = try container.decodeIfPresent(String.self, forKey: .favouriteTreat)
+        self.appleUserId = try container.decodeIfPresent(String.self, forKey: .appleUserId)
+        self.appleEmail = try container.decodeIfPresent(String.self, forKey: .appleEmail)
     }
 
     // Calcul de l'âge qu'aura la personne au prochain anniversaire

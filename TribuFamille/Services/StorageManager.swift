@@ -174,6 +174,126 @@ class StorageManager: ObservableObject {
         saveAllLocalData()
     }
 
+    // MARK: - Connexion Directe avec Apple ID
+    func loginWithAppleID(
+        appleUserId: String,
+        fullName: PersonNameComponents?,
+        email: String?,
+        familyCode: String = "MILLET-2026",
+        familyPassword: String = "2121.bmw"
+    ) async throws {
+        let targetCode = familyCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "MILLET-2026" : familyCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        let targetPassword = familyPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "2121.bmw" : familyPassword.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var resolvedName = ""
+        if let given = fullName?.givenName, !given.isEmpty {
+            resolvedName = given
+            if let fam = fullName?.familyName, !fam.isEmpty {
+                resolvedName += " \(fam)"
+            }
+        }
+
+        if resolvedName.isEmpty {
+            resolvedName = UserDefaults.standard.string(forKey: "tribu_apple_name_\(appleUserId)") ?? ""
+        }
+        if resolvedName.isEmpty {
+            resolvedName = UserDefaults.standard.string(forKey: "tribu_current_member_name") ?? ""
+        }
+        if resolvedName.isEmpty {
+            let dev = UIDevice.current.name
+            if dev.contains("de ") {
+                resolvedName = dev.components(separatedBy: "de ").last?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Marc"
+            } else {
+                resolvedName = "Marc"
+            }
+        }
+
+        UserDefaults.standard.set(resolvedName, forKey: "tribu_apple_name_\(appleUserId)")
+        UserDefaults.standard.set(appleUserId, forKey: "tribu_apple_user_id")
+        if let email = email {
+            UserDefaults.standard.set(email, forKey: "tribu_apple_email")
+        }
+
+        var payload = try? await CloudSyncService.shared.fetchFamily(code: targetCode)
+        if payload == nil {
+            let creator = Member(
+                name: resolvedName,
+                role: "Père",
+                birthDate: Calendar.current.date(byAdding: .year, value: -28, to: Date()) ?? Date(),
+                appleUserId: appleUserId,
+                appleEmail: email
+            )
+            payload = try await CloudSyncService.shared.createFamily(
+                name: "Famille \(resolvedName)",
+                code: targetCode,
+                password: targetPassword,
+                creator: creator
+            )
+        }
+
+        guard var currentPayload = payload else {
+            throw FamilyError.notFound
+        }
+
+        if !currentPayload.password.isEmpty && currentPayload.password != targetPassword {
+            throw FamilyError.invalidPassword
+        }
+
+        var me: Member
+        if let existing = currentPayload.members.first(where: {
+            ($0.appleUserId != nil && $0.appleUserId == appleUserId) ||
+            $0.name.lowercased() == resolvedName.lowercased()
+        }) {
+            me = existing
+            if me.appleUserId == nil {
+                me.appleUserId = appleUserId
+                if let idx = currentPayload.members.firstIndex(where: { $0.id == me.id }) {
+                    currentPayload.members[idx] = me
+                }
+            }
+        } else {
+            me = Member(
+                name: resolvedName,
+                role: "Membre",
+                birthDate: Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date(),
+                appleUserId: appleUserId,
+                appleEmail: email
+            )
+            currentPayload.members.append(me)
+            try await CloudSyncService.shared.saveFamily(payload: currentPayload)
+        }
+
+        self.currentMember = me
+        self.tribeCode = currentPayload.code
+        self.tribeName = currentPayload.name
+        self.tribePassword = currentPayload.password
+        self.members = currentPayload.members
+        self.events = currentPayload.events
+        self.shoppingItems = currentPayload.shoppingItems
+        self.quotes = currentPayload.quotes
+        self.contacts = currentPayload.contacts
+        self.isLoggedIn = true
+
+        saveSession()
+        saveAllLocalDataInternal()
+        NotificationManager.shared.scheduleBirthdayNotifications(for: self.members)
+    }
+
+    // MARK: - Connexion Express iPhone / Face ID
+    func quickLoginWithDevice(
+        familyCode: String = "MILLET-2026",
+        familyPassword: String = "2121.bmw"
+    ) async throws {
+        let savedAppleId = UserDefaults.standard.string(forKey: "tribu_apple_user_id") ?? "apple_device_\(UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString)"
+        try await loginWithAppleID(
+            appleUserId: savedAppleId,
+            fullName: nil,
+            email: UserDefaults.standard.string(forKey: "tribu_apple_email"),
+            familyCode: familyCode,
+            familyPassword: familyPassword
+        )
+    }
+
     // MARK: - Onboarding : Rejoindre une Tribu
     func joinFamily(
         code: String,

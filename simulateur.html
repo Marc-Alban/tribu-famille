@@ -579,6 +579,29 @@
                 <p>Espace intime & privé sans publicité ni tracking</p>
             </div>
 
+            <!-- APPLE ID DIRECT LOGIN BUTTONS -->
+            <div class="card card-gold" style="gap: 10px; padding: 14px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;"></span>
+                    <span style="font-size: 11px; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px;">Connexion Apple ID Directe</span>
+                </div>
+                <p style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                    Connexion instantanée avec votre iPhone sans saisie manuelle.
+                </p>
+                <button class="btn-apple-id" onclick="handleAppleLoginSimulator()" style="background: #ffffff; color: #000000; font-weight: 700; font-size: 13px; padding: 12px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <span style="font-size: 16px;"></span> Continuer avec Apple ID
+                </button>
+                <button class="btn-faceid" onclick="handleFaceIDLoginSimulator()" style="background: #141c2e; color: #f59e0b; font-weight: 700; font-size: 12px; padding: 10px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+                    <span>👤</span> Accès Rapide Face ID
+                </button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin: 4px 0;">
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08);"></div>
+                <span style="font-size: 10px; color: #64748b; font-weight: 700;">OU OPTIONS MANUELLES</span>
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08);"></div>
+            </div>
+
             <!-- TAB CHOIX CRÉATION / REJOINDRE -->
             <div class="auth-mode-selector">
                 <button class="auth-mode-btn active" id="btnModeCreate" onclick="setAuthMode('create')">Créer ma Tribu</button>
@@ -1071,6 +1094,34 @@
             document.getElementById('btnModeJoin').classList.toggle('active', mode === 'join');
             document.getElementById('cardCreateTribe').style.display = mode === 'create' ? 'flex' : 'none';
             document.getElementById('cardJoinTribe').style.display = mode === 'join' ? 'flex' : 'none';
+        }
+
+        function handleAppleLoginSimulator() {
+            state.currentUser = {
+                id: 'usr_apple_marc',
+                name: 'Marc',
+                role: 'Fils',
+                birthDate: '1998-04-15',
+                shoeSize: '43',
+                clothingSize: 'L',
+                favouriteTreat: 'Tarte Tatin'
+            };
+            state.tribe = {
+                name: 'Famille Millet',
+                code: 'MILLET-2026',
+                password: '2121.bmw',
+                members: [state.currentUser],
+                events: (state.tribe && state.tribe.events) ? state.tribe.events : [],
+                shopping: (state.tribe && state.tribe.shopping) ? state.tribe.shopping : [],
+                wishes: (state.tribe && state.tribe.wishes) ? state.tribe.wishes : [],
+                quotes: (state.tribe && state.tribe.quotes) ? state.tribe.quotes : []
+            };
+            state.isLoggedIn = true;
+            saveState();
+        }
+
+        function handleFaceIDLoginSimulator() {
+            handleAppleLoginSimulator();
         }
 
         function handleCreateTribe() {
