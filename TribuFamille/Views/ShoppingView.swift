@@ -20,12 +20,12 @@ struct ShoppingView: View {
                 // TOP HEADER
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("LISTE PARTAGÉE")
+                        Text(storage.tribeName.isEmpty ? "LISTE PARTAGÉE" : storage.tribeName.uppercased())
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                             .tracking(1.5)
 
-                        Text("Courses de la Tribu")
+                        Text(storage.tribeName.isEmpty ? "Courses de la Tribu" : "Courses • \(storage.tribeName)")
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(.white)
                     }

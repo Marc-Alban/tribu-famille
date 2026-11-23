@@ -286,8 +286,7 @@ struct BirthdaysView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.green.opacity(0.3), lineWidth: 1)
                     )
-                }
-                .padding(.horizontal, 16)
+                    .padding(.horizontal, 16)
             }
             .padding(.bottom, 40)
         }

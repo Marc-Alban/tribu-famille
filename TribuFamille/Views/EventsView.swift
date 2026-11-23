@@ -37,25 +37,26 @@ struct EventsView: View {
                 // TITRE ÉCRAN
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("ÉVÉNEMENT FAMILIAL")
+                        Text(storage.tribeName.isEmpty ? "TRIBU FAMILLE" : storage.tribeName.uppercased())
                             .font(.system(size: 10, weight: .black))
                             .foregroundColor(.gray)
                             .tracking(1)
 
-                        Text(viewMode == 0 ? "Repas de Noël" : (viewMode == 1 ? "Dépenses & Pot" : "Calendrier"))
-                            .font(.system(size: 20, weight: .heavy))
+                        Text(viewMode == 0 ? (currentEvent?.title ?? "Repas & Fêtes") : (viewMode == 1 ? "Budget & Dépenses" : "Calendrier"))
+                            .font(.system(size: 18, weight: .heavy))
                             .foregroundColor(.white)
+                            .lineLimit(1)
                     }
                     Spacer()
 
                     // SÉLECTEUR DE VUE
                     Picker("Vue", selection: $viewMode) {
                         Text("Repas").tag(0)
-                        Text("Dépenses").tag(1)
+                        Text("Budget").tag(1)
                         Text("Mois").tag(2)
                     }
                     .pickerStyle(SegmentedPickerStyle())
-                    .frame(width: 200)
+                    .frame(width: 180)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
