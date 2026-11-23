@@ -83,9 +83,21 @@ struct WishlistView: View {
                                 Text("Pour \(member.name)")
                                     .font(.system(size: 15, weight: .bold))
                                     .foregroundColor(.white)
-                                Text(member.role)
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.gray)
+                                HStack(spacing: 4) {
+                                    Text(member.role)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.gray)
+                                    if let shoe = member.shoeSize {
+                                        Text("• P.\(shoe)")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    }
+                                    if let cloth = member.clothingSize {
+                                        Text("• \(cloth)")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    }
+                                }
                             }
 
                             Spacer()

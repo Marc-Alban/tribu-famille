@@ -98,7 +98,10 @@ class StorageManager: ObservableObject {
                     wishlist: [
                         WishlistItem(title: "Charentaises chaudes (taille 38)", priceEstimate: "35€"),
                         WishlistItem(title: "Boîte de chocolats fins pralinés", priceEstimate: "20€", isReservedBy: "Marc-Alban")
-                    ]
+                    ],
+                    shoeSize: "38",
+                    clothingSize: "M",
+                    favouriteTreat: "Tarte Tatin"
                 ),
                 Member(
                     name: "Papa (Marc-Alban)",
@@ -109,7 +112,9 @@ class StorageManager: ObservableObject {
                     wishlist: [
                         WishlistItem(title: "Livre d'histoire économique et bourse", priceEstimate: "24€"),
                         WishlistItem(title: "Set de couteaux japonais", priceEstimate: "75€")
-                    ]
+                    ],
+                    shoeSize: "43",
+                    clothingSize: "L"
                 ),
                 Member(
                     name: "Maman (Camille)",
@@ -119,7 +124,9 @@ class StorageManager: ObservableObject {
                     isChild: false,
                     wishlist: [
                         WishlistItem(title: "Écharpe cachemire beige", priceEstimate: "50€", isReservedBy: "Papa")
-                    ]
+                    ],
+                    shoeSize: "38",
+                    clothingSize: "S"
                 ),
                 Member(
                     name: "Léa",
@@ -129,7 +136,10 @@ class StorageManager: ObservableObject {
                     isChild: true,
                     wishlist: [
                         WishlistItem(title: "Livre illustré contes de fées", priceEstimate: "18€")
-                    ]
+                    ],
+                    shoeSize: "32",
+                    clothingSize: "10 ans",
+                    favouriteTreat: "Chocolat au lait"
                 ),
                 Member(
                     name: "Thomas",
@@ -139,7 +149,10 @@ class StorageManager: ObservableObject {
                     isChild: true,
                     wishlist: [
                         WishlistItem(title: "Casque audio Bluetooth", priceEstimate: "39€")
-                    ]
+                    ],
+                    shoeSize: "39",
+                    clothingSize: "14 ans",
+                    favouriteTreat: "Marrons glacés"
                 ),
                 Member(
                     name: "Lucas",
@@ -150,7 +163,10 @@ class StorageManager: ObservableObject {
                     wishlist: [
                         WishlistItem(title: "Lego Vaisseau spatial", priceEstimate: "45€"),
                         WishlistItem(title: "Jeu Switch Pokémon", priceEstimate: "49€", isReservedBy: "Mémère Denise")
-                    ]
+                    ],
+                    shoeSize: "28",
+                    clothingSize: "6 ans",
+                    favouriteTreat: "Bonbons gélifiés"
                 )
             ]
             saveMembers()

@@ -16,6 +16,54 @@ struct Member: Identifiable, Codable, Equatable {
     var allergies: String?
     var isChild: Bool = false
     var wishlist: [WishlistItem] = []
+    var shoeSize: String? = nil
+    var clothingSize: String? = nil
+    var favouriteTreat: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, role, birthDate, phone, allergies, isChild, wishlist, shoeSize, clothingSize, favouriteTreat
+    }
+
+    init(
+        id: String = UUID().uuidString,
+        name: String,
+        role: String,
+        birthDate: Date,
+        phone: String? = nil,
+        allergies: String? = nil,
+        isChild: Bool = false,
+        wishlist: [WishlistItem] = [],
+        shoeSize: String? = nil,
+        clothingSize: String? = nil,
+        favouriteTreat: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.role = role
+        self.birthDate = birthDate
+        self.phone = phone
+        self.allergies = allergies
+        self.isChild = isChild
+        self.wishlist = wishlist
+        self.shoeSize = shoeSize
+        self.clothingSize = clothingSize
+        self.favouriteTreat = favouriteTreat
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+        self.name = try container.decode(String.self, forKey: .name)
+        self.role = try container.decode(String.self, forKey: .role)
+        self.birthDate = try container.decode(Date.self, forKey: .birthDate)
+        self.phone = try container.decodeIfPresent(String.self, forKey: .phone)
+        self.allergies = try container.decodeIfPresent(String.self, forKey: .allergies)
+        self.isChild = try container.decodeIfPresent(Bool.self, forKey: .isChild) ?? false
+        self.wishlist = try container.decodeIfPresent([WishlistItem].self, forKey: .wishlist) ?? []
+        self.shoeSize = try container.decodeIfPresent(String.self, forKey: .shoeSize)
+        self.clothingSize = try container.decodeIfPresent(String.self, forKey: .clothingSize)
+        self.favouriteTreat = try container.decodeIfPresent(String.self, forKey: .favouriteTreat)
+    }
 
     // Calcul de l'âge qu'aura la personne au prochain anniversaire
     var nextAge: Int {

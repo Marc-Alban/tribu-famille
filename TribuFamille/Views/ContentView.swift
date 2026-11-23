@@ -97,13 +97,13 @@ struct ContentView: View {
                 TabView(selection: $selectedTab) {
                     BirthdaysView()
                         .tabItem {
-                            Label("Anniversaires", systemImage: "sparkles")
+                            Label("Fêtes", systemImage: "sparkles")
                         }
                         .tag(0)
 
                     EventsView()
                         .tabItem {
-                            Label("Agenda & Fêtes", systemImage: "calendar")
+                            Label("Agenda", systemImage: "calendar")
                         }
                         .tag(1)
 
@@ -121,7 +121,7 @@ struct ContentView: View {
 
                     GazetteView()
                         .tabItem {
-                            Label("Coin Mémère", systemImage: "heart.fill")
+                            Label("Gazette", systemImage: "heart.fill")
                         }
                         .tag(4)
                 }

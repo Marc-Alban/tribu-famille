@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Willet Family — Prototype iOS 100% Autonome</title>
+    <style>
+        /* RESET & BASE */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #05070d;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER OUTSIDE PHONE */
+        .preview-header {
+            width: 100%;
+            max-width: 440px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .preview-header h1 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #f59e0b;
+        }
+        .senior-btn {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #f59e0b;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .senior-btn:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        /* IPHONE CONTAINER */
+        .iphone-frame {
+            width: 390px;
+            height: 800px;
+            background-color: #0b0f19;
+            border-radius: 48px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 8px #1e293b, 0 0 0 10px #0f172a;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* STATUS BAR */
+        .status-bar {
+            height: 44px;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            background: #0b0f19;
+            z-index: 40;
+        }
+        .dynamic-island {
+            width: 110px;
+            height: 28px;
+            background: #000000;
+            border-radius: 20px;
+        }
+
+        /* APP TOP HEADER */
+        .app-header {
+            padding: 10px 18px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(11, 15, 25, 0.95);
+        }
+        .app-title-box h2 {
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tribe-code-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #f59e0b;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .app-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .avatar-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #1e293b;
+            padding: 3px 8px 3px 4px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            cursor: pointer;
+        }
+        .avatar-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* CONTENT VIEWS SCROLLABLE */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+        }
+        .screen-view {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        /* SECTION TITLES */
+        .section-tag {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #f59e0b;
+        }
+        .screen-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        /* CARDS */
+        .card {
+            background: #121826;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 14px;
+        }
+        .card-gold {
+            background: linear-gradient(135deg, rgba(30, 20, 10, 0.8), #121826);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 4px 20px -5px rgba(245, 158, 11, 0.15);
+        }
+        .card-emerald {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* BUTTONS */
+        .btn-gold {
+            background: #f59e0b;
+            color: #0b0f19;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-gold:active {
+            transform: scale(0.96);
+        }
+        .btn-full {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        .btn-subtle {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f59e0b;
+            font-weight: 600;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* CHECKBOXES & LIST ITEMS */
+        .list-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #0f1523;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .list-row:hover {
+            border-color: #334155;
+        }
+        .row-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1.5px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .is-checked .custom-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+            color: #0b0f19;
+        }
+        .is-checked .row-title {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+
+        /* SEGMENTED SWITCHER */
+        .segmented-control {
+            display: flex;
+            background: #0f1523;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 3px;
+        }
+        .segment-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .segment-btn.active {
+            background: #f59e0b;
+            color: #0b0f19;
+        }
+
+        /* PROGRESS BAR */
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* BOTTOM TAB BAR (iOS STYLE) */
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: rgba(11, 15, 25, 0.98);
+            border-top: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: 12px;
+            z-index: 50;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 60px;
+            gap: 2px;
+            transition: color 0.15s;
+        }
+        .tab-item.active {
+            color: #f59e0b;
+        }
+        .tab-icon {
+            font-size: 18px;
+        }
+
+        /* HOME INDICATOR */
+        .home-indicator {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 130px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            z-index: 60;
+            pointer-events: none;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+        }
+        .modal-content {
+            width: 100%;
+            background: #111827;
+            border-top: 1px solid #334155;
+            border-radius: 28px 28px 0 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 10px;
+        }
+        .modal-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .profile-card {
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .profile-card:hover {
+            border-color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRE D'INFO HORS TÉLÉPHONE -->
+    <div class="preview-header">
+        <h1><span class="pulse-dot"></span> Willet Family — Prototype Réel</h1>
+        <button onclick="toggleSeniorMode()" id="senior-toggle-btn" class="senior-btn">👓 Mode Senior</button>
+    </div>
+
+    <!-- IPHONE 16 PRO -->
+    <div class="iphone-frame">
+        
+        <!-- STATUS BAR -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <div class="dynamic-island"></div>
+            <span>5G 🔋</span>
+        </div>
+
+        <!-- APP TOP BAR -->
+        <div class="app-header">
+            <div class="app-title-box">
+                <h2>
+                    Willet Family
+                    <span onclick="copyCode()" class="tribe-code-badge">WILLET-2026 📋</span>
+                </h2>
+                <p id="connected-user-label" class="app-sub">Connecté : Marc-Alban (Papa)</p>
+            </div>
+            <div onclick="openProfileModal()" class="avatar-pill">
+                <div id="top-avatar" class="avatar-circle">M</div>
+                <span style="font-size: 10px; color: #94a3b8;">▼</span>
+            </div>
+        </div>
+
+        <!-- ZONE CENTRALE DE DÉFILEMENT -->
+        <div id="content-scroll" class="content-area">
+
+            <!-- ===================================== -->
+            <!-- ÉCRAN 1 : FÊTES (ANNIVERSAIRES)       -->
+            <!-- ===================================== -->
+            <div id="view-0" class="screen-view">
+                <div>
+                    <span class="section-tag">Anniversaires & Alertes</span>
+                    <h3 class="screen-title">Prochains Événements</h3>
+                </div>
+
+                <!-- CARTE VIP MÉMÈRE DENISE -->
+                <div class="card card-gold">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 10px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">Bientôt à l'honneur</span>
+                        <span style="font-size: 11px; font-weight: 700; color: #fbbf24;">24 Décembre</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 36px; background: rgba(245, 158, 11, 0.2); width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center;">👵🏻</div>
+                        <div>
+                            <h4 style="font-size: 16px; font-weight: 800; color: #ffffff;">Mémère Denise</h4>
+                            <p style="font-size: 12px; color: #94a3b8;">84 ans • <strong style="color: #f59e0b;">Plus que 2 jours !</strong></p>
+                            <p style="font-size: 11px; color: #64748b; margin-top: 2px;">🍰 Gâteau préféré : Tarte Tatin</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button onclick="sendWish('Mémère Denise')" class="btn-gold" style="flex: 1;">💌 Souhaiter par SMS</button>
+                        <button onclick="alert('Pointure: 38 • Vêtements: M • Chocolats noirs préférés')" class="btn-subtle">Fiche & Tailles</button>
+                    </div>
+                </div>
+
+                <!-- BANNIÈRE RAPPELS -->
+                <div class="card card-emerald" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
+                    <span style="font-size: 20px;">🔔</span>
+                    <div>
+                        <p style="font-size: 12px; font-weight: 700; color: #10b981;">Rappels actifs sur vos iPhone</p>
+                        <p style="font-size: 10px; color: #94a3b8;">Alertes synchronisées à J-3 et le jour J à 09h00.</p>
+                    </div>
+                </div>
+
+                <!-- AUTRES DATES -->
+                <div class="card">
+                    <p style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Autres célébrations</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="list-row" style="cursor: default;">
+                            <div class="row-left">
+                                <span style="font-size: 20px;">👧🏼</span>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700;">Léa (9 ans)</p>
+                                    <p style="font-size: 11px; color: #f59e0b;">Dans 18 jours • 11 Janvier</p>
+                                </div>
+                            </div>
+                            <button onclick="sendWish('Léa')" class="btn-subtle">Souhaiter</button>
+                        </div>
+                        <div class="list-row" style="cursor: default;">
+                            <div class="row-left">
+                                <span style="font-size: 20px;">👦🏻</span>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700;">Thomas (14 ans)</p>
+                                    <p style="font-size: 11px; color: #94a3b8;">Dans 42 jours • 4 Février</p>
+                                </div>
+                            </div>
+                            <button onclick="sendWish('Thomas')" class="btn-subtle">Souhaiter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================================== -->
+            <!-- ÉCRAN 2 : AGENDA & REPAS DE NOËL     -->
+            <!-- ===================================== -->
+            <div id="view-1" class="screen-view hidden">
+                <div>
+                    <span class="section-tag">Agenda & Fêtes</span>
+                    <h3 class="screen-title">Organisation de Tribu</h3>
+                </div>
+
+                <div class="segmented-control">
+                    <button onclick="switchAgendaTab('repas')" id="seg-repas" class="segment-btn active">🍽️ Repas de Noël</button>
+                    <button onclick="switchAgendaTab('cagnotte')" id="seg-cagnotte" class="segment-btn">💶 Dépenses & Pot</button>
+                </div>
+
+                <!-- SOUS-ONGLET REPAS -->
+                <div id="sub-repas" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="font-size: 10px; color: #f59e0b; font-weight: 700; text-transform: uppercase;">Mardi 24 Déc. • 19h30</span>
+                                <h4 style="font-size: 15px; font-weight: 800; color: #ffffff;">Réveillon chez Mamie & Papi</h4>
+                            </div>
+                            <span style="font-size: 11px; background: #1e293b; padding: 4px 8px; border-radius: 8px; font-weight: 700;">12 convives</span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8;">
+                                <span>Préparatifs attribués</span>
+                                <span style="color: #10b981; font-weight: 700;">3 sur 5 prêts (60%)</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Qui ramène quoi ?</p>
+                        
+                        <div onclick="toggleCheck(this)" class="list-row is-checked">
+                            <div class="row-left">
+                                <div class="custom-checkbox">✓</div>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700;">Dinde rôtie aux marrons</p>
+                                    <p style="font-size: 10px; color: #94a3b8;">Apporté par <strong style="color: #f59e0b;">Papa (Marc-Alban)</strong></p>
+                                </div>
+                            </div>
+                            <span style="font-size: 10px; background: #1e293b; padding: 3px 6px; border-radius: 6px;">Plat</span>
+                        </div>
+
+                        <div onclick="toggleCheck(this)" class="list-row is-checked">
+                            <div class="row-left">
+                                <div class="custom-checkbox">✓</div>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700;">Gratin dauphinois maison</p>
+                                    <p style="font-size: 10px; color: #94a3b8;">Apporté par <strong style="color: #f59e0b;">Maman (Camille)</strong></p>
+                                </div>
+                            </div>
+                            <span style="font-size: 10px; background: #1e293b; padding: 3px 6px; border-radius: 6px;">Accomp.</span>
+                        </div>
+
+                        <div onclick="toggleCheck(this)" class="list-row is-checked">
+                            <div class="row-left">
+                                <div class="custom-checkbox">✓</div>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700;">Bûche chocolat & marrons</p>
+                                    <p style="font-size: 10px; color: #94a3b8;">Apporté par <strong style="color: #f59e0b;">Mémère Denise</strong></p>
+                                </div>
+                            </div>
+                            <span style="font-size: 10px; background: #1e293b; padding: 3px 6px; border-radius: 6px;">Dessert</span>
+                        </div>
+
+                        <div onclick="toggleCheck(this)" class="list-row" style="border-color: rgba(245, 158, 11, 0.4);">
+                            <div class="row-left">
+                                <div class="custom-checkbox"></div>
+                                <div>
+                                    <p class="row-title" style="font-size: 13px; font-weight: 700; color: #fde68a;">Champagne & Vins fins (3 bouteilles)</p>
+                                    <p style="font-size: 10px; color: #f59e0b;">Non attribué • Toucher pour prendre</p>
+                                </div>
+                            </div>
+                            <span style="font-size: 10px; background: #1e293b; padding: 3px 6px; border-radius: 6px;">Boissons</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOUS-ONGLET DÉPENSES & CAGNOTTE -->
+                <div id="sub-cagnotte" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="card card-gold">
+                        <span style="font-size: 10px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">Équilibrage des frais</span>
+                        <h4 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 4px;">Total engagé : 240 €</h4>
+                        <p style="font-size: 12px; color: #94a3b8;">Soit env. 30 € par adulte.</p>
+                    </div>
+                    <div class="list-row" style="cursor: default;">
+                        <div>
+                            <p style="font-size: 13px; font-weight: 700;">Dinde + Vins (Marc-Alban)</p>
+                            <p style="font-size: 11px; color: #10b981;">A payé 140 €</p>
+                        </div>
+                        <span style="color: #10b981; font-weight: 800; font-size: 12px;">+50 €</span>
+                    </div>
+                    <div class="list-row" style="cursor: default;">
+                        <div>
+                            <p style="font-size: 13px; font-weight: 700;">Fromages & Pains (Camille)</p>
+                            <p style="font-size: 11px; color: #f59e0b;">A payé 40 €</p>
+                        </div>
+                        <span style="color: #f59e0b; font-weight: 800; font-size: 12px;">Doit 10 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================================== -->
+            <!-- ÉCRAN 3 : COURSES                    -->
+            <!-- ===================================== -->
+            <div id="view-2" class="screen-view hidden">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <span class="section-tag">Courses Partagées</span>
+                        <h3 class="screen-title">Supermarché & Marché</h3>
+                    </div>
+                    <span style="font-size: 11px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 8px; border-radius: 20px; font-weight: 700;">5 restants</span>
+                </div>
+
+                <!-- RAYON ÉPICERIE -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">
+                        <span>🟡 Épicerie</span>
+                        <span style="color: #64748b;">ALLÉE 3</span>
+                    </div>
+                    <div onclick="toggleCheck(this)" class="list-row">
+                        <div class="row-left">
+                            <div class="custom-checkbox"></div>
+                            <span class="row-title" style="font-size: 13px; font-weight: 600;">Café moulu arabica</span>
+                        </div>
+                        <span style="font-size: 11px; color: #f59e0b; font-weight: 700;">1 boîte</span>
+                    </div>
+                    <div onclick="toggleCheck(this)" class="list-row">
+                        <div class="row-left">
+                            <div class="custom-checkbox"></div>
+                            <span class="row-title" style="font-size: 13px; font-weight: 600;">Chocolat noir pâtissier 70%</span>
+                        </div>
+                        <span style="font-size: 11px; color: #f59e0b; font-weight: 700;">2 tab.</span>
+                    </div>
+                </div>
+
+                <!-- RAYON FRAIS -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">
+                        <span>🔵 Frais & Crèmerie</span>
+                        <span style="color: #64748b;">ALLÉE 4</span>
+                    </div>
+                    <div onclick="toggleCheck(this)" class="list-row">
+                        <div class="row-left">
+                            <div class="custom-checkbox"></div>
+                            <span class="row-title" style="font-size: 13px; font-weight: 600;">Lait demi-écrémé</span>
+                        </div>
+                        <span style="font-size: 11px; color: #38bdf8; font-weight: 700;">2 bouteilles</span>
+                    </div>
+                    <div onclick="toggleCheck(this)" class="list-row is-checked">
+                        <div class="row-left">
+                            <div class="custom-checkbox">✓</div>
+                            <span class="row-title" style="font-size: 13px; font-weight: 600;">Beurre doux de Normandie</span>
+                        </div>
+                        <span style="font-size: 11px; color: #10b981; font-weight: 700;">1 plaquette</span>
+                    </div>
+                </div>
+
+                <!-- RAYON LÉGUMES -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase;">
+                        <span>🟢 Fruits & Légumes</span>
+                        <span style="color: #64748b;">ENTRÉE</span>
+                    </div>
+                    <div onclick="toggleCheck(this)" class="list-row">
+                        <div class="row-left">
+                            <div class="custom-checkbox"></div>
+                            <span class="row-title" style="font-size: 13px; font-weight: 600;">Clémentines de Corse</span>
+                        </div>
+                        <span style="font-size: 11px; color: #10b981; font-weight: 700;">1 kg</span>
+                    </div>
+                </div>
+
+                <button onclick="alert('Article ajouté aux courses !')" class="btn-gold btn-full">+ Ajouter un article</button>
+            </div>
+
+            <!-- ===================================== -->
+            <!-- ÉCRAN 4 : CADEAUX SECRETS            -->
+            <!-- ===================================== -->
+            <div id="view-3" class="screen-view hidden">
+                <div>
+                    <span class="section-tag">Idées Cadeaux</span>
+                    <h3 class="screen-title">Surprises Secrètes 🎁</h3>
+                </div>
+
+                <div class="card card-gold">
+                    <h4 style="font-size: 13px; font-weight: 800; color: #ffffff;">🔒 Principe de surprise totale</h4>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Quand vous réservez un cadeau pour un membre, il ne peut pas le voir, mais tous les autres membres savent qu'il est déjà pris !</p>
+                </div>
+
+                <!-- Mémère Denise -->
+                <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 6px;">
+                        <span style="font-size: 13px; font-weight: 800;">👵🏻 Pour Mémère Denise</span>
+                        <button onclick="alert('Pointure: 38 • Vêtements: M')" class="btn-subtle">Pointure & Tailles</button>
+                    </div>
+                    <div class="list-row" style="cursor: default;">
+                        <div>
+                            <p style="font-size: 13px; font-weight: 700;">Charentaises chaudes en laine</p>
+                            <p style="font-size: 11px; color: #10b981; font-weight: 700;">~35 € • 🔒 Réservé par Thomas</p>
+                        </div>
+                        <span style="font-size: 10px; background: #1e293b; padding: 4px 8px; border-radius: 6px; color: #94a3b8; font-weight: 700;">Déjà pris</span>
+                    </div>
+                    <div class="list-row">
+                        <div>
+                            <p style="font-size: 13px; font-weight: 700;">Boîte de marrons glacés fins</p>
+                            <p style="font-size: 11px; color: #94a3b8;">~22 € • Disponible</p>
+                        </div>
+                        <button onclick="alert('Réservé en secret pour vous !')" class="btn-gold" style="padding: 6px 10px;">Je prends</button>
+                    </div>
+                </div>
+
+                <!-- Léa -->
+                <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 6px;">
+                        <span style="font-size: 13px; font-weight: 800;">👧🏼 Pour Léa (9 ans)</span>
+                        <button onclick="alert('Taille vêtements: 10 ans • Jouets créatifs')" class="btn-subtle">Fiche Enfant</button>
+                    </div>
+                    <div class="list-row">
+                        <div>
+                            <p style="font-size: 13px; font-weight: 700;">Boîte de feutres aquarelle</p>
+                            <p style="font-size: 11px; color: #94a3b8;">~18 € • Disponible</p>
+                        </div>
+                        <button onclick="alert('Réservé en secret pour vous !')" class="btn-gold" style="padding: 6px 10px;">Je prends</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================================== -->
+            <!-- ÉCRAN 5 : GAZETTE & COIN MÉMÈRE      -->
+            <!-- ===================================== -->
+            <div id="view-4" class="screen-view hidden">
+                <div>
+                    <span class="section-tag">Espace Famille</span>
+                    <h3 class="screen-title">Gazette & Urgences</h3>
+                </div>
+
+                <!-- MOT D'ENFANT -->
+                <div class="card card-gold">
+                    <span style="font-size: 10px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">💬 Le mot de Léo</span>
+                    <p style="font-size: 15px; font-style: italic; font-weight: 700; color: #ffffff; margin-top: 6px; line-height: 1.4;">
+                        « Mémère, elle fait les meilleurs câlins du monde entier. »
+                    </p>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 6px;">Léo, 6 ans • Dimanche dernier ❤️ 12 coeurs</p>
+                </div>
+
+                <!-- SOUVENIR PHOTO -->
+                <div class="card" style="text-align: center; padding: 20px;">
+                    <span style="font-size: 32px;">🕯️ 🎄 🍽️ 🥂</span>
+                    <h4 style="font-size: 14px; font-weight: 800; color: #ffffff; margin-top: 6px;">Tous réunis pour Noël</h4>
+                    <p style="font-size: 11px; color: #94a3b8;">Un beau moment à garder précieusement.</p>
+                </div>
+
+                <!-- TROUSSEAU D'URGENCE (ACCÈS 1 CLIC) -->
+                <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Le trousseau d'urgence</span>
+                    
+                    <div class="list-row" style="background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.3);">
+                        <div class="row-left">
+                            <span style="font-size: 20px;">🚑</span>
+                            <div>
+                                <p style="font-size: 13px; font-weight: 800; color: #ffffff;">Urgences Médicales</p>
+                                <p style="font-size: 10px; color: #fca5a5;">Appel direct immédiat</p>
+                            </div>
+                        </div>
+                        <a href="tel:15" style="background: #dc2626; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 13px; text-decoration: none;">15</a>
+                    </div>
+
+                    <div class="list-row">
+                        <div class="row-left">
+                            <span style="font-size: 20px;">👨🏻‍⚕️</span>
+                            <div>
+                                <p style="font-size: 13px; font-weight: 700;">Dr. Martin (Médecin de famille)</p>
+                                <p style="font-size: 10px; color: #94a3b8;">Cabinet médical</p>
+                            </div>
+                        </div>
+                        <a href="tel:0235123456" class="btn-subtle" style="text-decoration: none;">Appeler</a>
+                    </div>
+
+                    <div class="list-row">
+                        <div class="row-left">
+                            <span style="font-size: 20px;">📶</span>
+                            <div>
+                                <p style="font-size: 13px; font-weight: 700;">Wi-Fi de la maison</p>
+                                <p style="font-size: 10px; color: #94a3b8;">Livebox-Willet (WPA3)</p>
+                            </div>
+                        </div>
+                        <button onclick="copyWifi()" class="btn-subtle">Copier</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BARRE DE NAVIGATION (5 ONGLETS COURTS SANS DÉBORDEMENT) -->
+        <div class="tab-bar">
+            <button onclick="navigateTab(0)" id="tab-btn-0" class="tab-item active">
+                <span class="tab-icon">✨</span>
+                <span>Fêtes</span>
+            </button>
+            <button onclick="navigateTab(1)" id="tab-btn-1" class="tab-item">
+                <span class="tab-icon">📅</span>
+                <span>Agenda</span>
+            </button>
+            <button onclick="navigateTab(2)" id="tab-btn-2" class="tab-item">
+                <span class="tab-icon">🛒</span>
+                <span>Courses</span>
+            </button>
+            <button onclick="navigateTab(3)" id="tab-btn-3" class="tab-item">
+                <span class="tab-icon">🎁</span>
+                <span>Cadeaux</span>
+            </button>
+            <button onclick="navigateTab(4)" id="tab-btn-4" class="tab-item">
+                <span class="tab-icon">❤️</span>
+                <span>Gazette</span>
+            </button>
+        </div>
+
+        <!-- HOME INDICATOR -->
+        <div class="home-indicator"></div>
+
+        <!-- MODAL CHANGEMENT DE PROFIL -->
+        <div id="modal-profile" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">Changer de profil</span>
+                    <button onclick="closeProfileModal()" class="modal-close">✕</button>
+                </div>
+                <div class="profile-grid">
+                    <div onclick="selectMember('Mémère Denise', 'Grand-mère', '👵🏻')" class="profile-card">
+                        <span style="font-size: 24px;">👵🏻</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Mémère Denise</p>
+                            <p style="font-size: 10px; color: #f59e0b;">84 ans</p>
+                        </div>
+                    </div>
+                    <div onclick="selectMember('Marc-Alban', 'Papa', '👨🏻')" class="profile-card" style="border-color: #f59e0b;">
+                        <span style="font-size: 24px;">👨🏻</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Marc-Alban</p>
+                            <p style="font-size: 10px; color: #f59e0b;">Papa</p>
+                        </div>
+                    </div>
+                    <div onclick="selectMember('Camille', 'Maman', '👩🏻')" class="profile-card">
+                        <span style="font-size: 24px;">👩🏻</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Camille</p>
+                            <p style="font-size: 10px; color: #94a3b8;">Maman</p>
+                        </div>
+                    </div>
+                    <div onclick="selectMember('Léa', 'Fille', '👧🏼')" class="profile-card">
+                        <span style="font-size: 24px;">👧🏼</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Léa</p>
+                            <p style="font-size: 10px; color: #94a3b8;">9 ans</p>
+                        </div>
+                    </div>
+                    <div onclick="selectMember('Thomas', 'Fils', '👦🏻')" class="profile-card">
+                        <span style="font-size: 24px;">👦🏻</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Thomas</p>
+                            <p style="font-size: 10px; color: #94a3b8;">14 ans</p>
+                        </div>
+                    </div>
+                    <div onclick="selectMember('Lucas', 'Fils', '👶🏻')" class="profile-card">
+                        <span style="font-size: 24px;">👶🏻</span>
+                        <div>
+                            <p style="font-size: 12px; font-weight: 800;">Lucas</p>
+                            <p style="font-size: 10px; color: #94a3b8;">6 ans</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT JS AUTONOME SANS AUCUNE DÉPENDANCE -->
+    <script>
+        let currentTab = 0;
+        let isSenior = false;
+
+        function navigateTab(tabIdx) {
+            currentTab = tabIdx;
+            for (let i = 0; i < 5; i++) {
+                const view = document.getElementById('view-' + i);
+                const btn = document.getElementById('tab-btn-' + i);
+                if (i === tabIdx) {
+                    view.classList.remove('hidden');
+                    btn.classList.add('active');
+                } else {
+                    view.classList.add('hidden');
+                    btn.classList.remove('active');
+                }
+            }
+            document.getElementById('content-scroll').scrollTop = 0;
+        }
+
+        function switchAgendaTab(sub) {
+            const repas = document.getElementById('sub-repas');
+            const cagnotte = document.getElementById('sub-cagnotte');
+            const bRepas = document.getElementById('seg-repas');
+            const bCagnotte = document.getElementById('seg-cagnotte');
+            if (sub === 'repas') {
+                repas.classList.remove('hidden');
+                cagnotte.classList.add('hidden');
+                bRepas.classList.add('active');
+                bCagnotte.classList.remove('active');
+            } else {
+                repas.classList.add('hidden');
+                cagnotte.classList.remove('hidden');
+                bCagnotte.classList.add('active');
+                bRepas.classList.remove('active');
+            }
+        }
+
+        function toggleCheck(row) {
+            row.classList.toggle('is-checked');
+            const box = row.querySelector('.custom-checkbox');
+            if (row.classList.contains('is-checked')) {
+                box.textContent = '✓';
+            } else {
+                box.textContent = '';
+            }
+        }
+
+        function toggleSeniorMode() {
+            isSenior = !isSenior;
+            const scroll = document.getElementById('content-scroll');
+            const btn = document.getElementById('senior-toggle-btn');
+            if (isSenior) {
+                scroll.style.fontSize = '15px';
+                btn.textContent = 'Désactiver Senior';
+            } else {
+                scroll.style.fontSize = '';
+                btn.textContent = '👓 Mode Senior';
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('modal-profile').classList.remove('hidden');
+        }
+        function closeProfileModal() {
+            document.getElementById('modal-profile').classList.add('hidden');
+        }
+
+        function selectMember(name, role, avatar) {
+            document.getElementById('connected-user-label').textContent = 'Connecté : ' + name + ' (' + role + ')';
+            document.getElementById('top-avatar').textContent = avatar;
+            closeProfileModal();
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText('WILLET-2026');
+            alert('Code tribu WILLET-2026 copié dans le presse-papier !');
+        }
+        function copyWifi() {
+            navigator.clipboard.writeText('FamilleWillet2026!');
+            alert('Mot de passe Wi-Fi copié !');
+        }
+        function sendWish(name) {
+            alert('Simulation SMS pour ' + name + ' : "Joyeux anniversaire ! Bisous de toute la tribu ❤️"');
+        }
+    </script>
+</body>
+</html>

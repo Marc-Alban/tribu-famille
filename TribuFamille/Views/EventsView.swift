@@ -42,7 +42,7 @@ struct EventsView: View {
                             .foregroundColor(.gray)
                             .tracking(1)
 
-                        Text(viewMode == 0 ? "Repas de Noël" : "Calendrier Partagé")
+                        Text(viewMode == 0 ? "Repas de Noël" : (viewMode == 1 ? "Dépenses & Pot" : "Calendrier"))
                             .font(.system(size: 20, weight: .heavy))
                             .foregroundColor(.white)
                     }
@@ -50,11 +50,12 @@ struct EventsView: View {
 
                     // SÉLECTEUR DE VUE
                     Picker("Vue", selection: $viewMode) {
-                        Text("Fêtes").tag(0)
-                        Text("Mois").tag(1)
+                        Text("Repas").tag(0)
+                        Text("Dépenses").tag(1)
+                        Text("Mois").tag(2)
                     }
                     .pickerStyle(SegmentedPickerStyle())
-                    .frame(width: 130)
+                    .frame(width: 200)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
@@ -237,9 +238,14 @@ struct EventsView: View {
                         .padding(.horizontal, 16)
                         .padding(.bottom, 24)
                     }
+                } else if viewMode == 1 {
+                    // ==========================================
+                    // MODE 1 : DÉPENSES & POT COMMUN
+                    // ==========================================
+                    expensesView
                 } else {
                     // ==========================================
-                    // MODE 1 : CALENDRIER DU MOIS INTERACTIF
+                    // MODE 2 : CALENDRIER DU MOIS INTERACTIF
                     // ==========================================
                     monthlyCalendarView
                 }
@@ -251,6 +257,83 @@ struct EventsView: View {
         .sheet(isPresented: $showAddEventModal) {
             addEventSheet
         }
+    }
+
+    // MARK: - Vue Dépenses & Pot Commun
+    private var expensesView: some View {
+        VStack(spacing: 16) {
+            // HERO RECAP
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("CAGNOTTE & ÉQUILIBRAGE")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                    Spacer()
+                    Text("Noël 2026")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.gray)
+                }
+
+                Text("Total engagé : 240 €")
+                    .font(.system(size: 20, weight: .heavy))
+                    .foregroundColor(.white)
+
+                Text("Équilibrage automatique : ~30 € par adulte")
+                    .font(.system(size: 12))
+                    .foregroundColor(.gray)
+            }
+            .padding(16)
+            .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
+            )
+            .padding(.horizontal, 16)
+
+            // LISTE DES DÉPENSES EFFECTUÉES
+            VStack(alignment: .leading, spacing: 10) {
+                Text("DÉTAIL DES ACHATS RÉALISÉS")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundColor(.gray)
+
+                VStack(spacing: 8) {
+                    expenseRow(title: "Dinde fermière & Champagne", buyer: "Marc-Alban (Papa)", amount: "140 €", balance: "+50 €", isPositive: true)
+                    expenseRow(title: "Fromages AOP & Pains spéciaux", buyer: "Camille (Maman)", amount: "40 €", balance: "Doit 10 €", isPositive: false)
+                    expenseRow(title: "Bûche pâtissière & Chocolats", buyer: "Mémère Denise", amount: "60 €", balance: "Équilibré", isPositive: true)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+        }
+    }
+
+    private func expenseRow(title: String, buyer: String, amount: String, balance: String, isPositive: Bool) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                Text("Avancé par \(buyer) • Total \(amount)")
+                    .font(.system(size: 11))
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            Text(balance)
+                .font(.system(size: 12, weight: .heavy))
+                .foregroundColor(isPositive ? Color(red: 0.06, green: 0.72, blue: 0.50) : Color(red: 0.96, green: 0.62, blue: 0.04))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background((isPositive ? Color(red: 0.06, green: 0.72, blue: 0.50) : Color(red: 0.96, green: 0.62, blue: 0.04)).opacity(0.15))
+                .cornerRadius(6)
+        }
+        .padding(12)
+        .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+        )
     }
 
     // MARK: - Vue Calendrier Mois

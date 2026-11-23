@@ -4,6 +4,7 @@ struct BirthdaysView: View {
     @EnvironmentObject var storage: StorageManager
     @EnvironmentObject var notifications: NotificationManager
     @State private var showAddModal = false
+    @State private var selectedMemberForSizes: Member? = nil
 
     // Form states
     @State private var newName = ""
@@ -105,16 +106,29 @@ struct BirthdaysView: View {
 
                             Spacer()
 
-                            Button(action: {
-                                sendWishMessage(for: next)
-                            }) {
-                                Text("Souhaiter")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.black)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 8)
-                                    .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                    .cornerRadius(10)
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    sendWishMessage(for: next)
+                                }) {
+                                    Text("Souhaiter")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 7)
+                                        .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                        .cornerRadius(8)
+                                }
+
+                                Button(action: {
+                                    selectedMemberForSizes = next
+                                }) {
+                                    Image(systemName: "tag.fill")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                        .padding(7)
+                                        .background(Color(red: 0.12, green: 0.16, blue: 0.23))
+                                        .cornerRadius(8)
+                                }
                             }
                         }
                     }
@@ -174,16 +188,29 @@ struct BirthdaysView: View {
 
                                 Spacer()
 
-                                Button(action: {
-                                    sendWishMessage(for: member)
-                                }) {
-                                    Text("Souhaiter")
-                                        .font(.system(size: 11, weight: .bold))
-                                        .foregroundColor(.black)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                        .cornerRadius(8)
+                                HStack(spacing: 6) {
+                                    Button(action: {
+                                        sendWishMessage(for: member)
+                                    }) {
+                                        Text("Souhaiter")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(.black)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                            .cornerRadius(8)
+                                    }
+
+                                    Button(action: {
+                                        selectedMemberForSizes = member
+                                    }) {
+                                        Image(systemName: "tag.fill")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                            .padding(6)
+                                            .background(Color(red: 0.12, green: 0.16, blue: 0.23))
+                                            .cornerRadius(6)
+                                    }
                                 }
                             }
                             .padding(12)
@@ -227,6 +254,82 @@ struct BirthdaysView: View {
         .sheet(isPresented: $showAddModal) {
             addMemberSheet
         }
+        .sheet(item: $selectedMemberForSizes) { member in
+            memberSizesSheet(for: member)
+        }
+    }
+
+    private func memberSizesSheet(for member: Member) -> some View {
+        NavigationView {
+            ZStack {
+                Color(red: 0.05, green: 0.07, blue: 0.12).ignoresSafeArea()
+
+                VStack(spacing: 20) {
+                    VStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.2))
+                                .frame(width: 60, height: 60)
+                            Text(String(member.name.prefix(1)))
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        }
+
+                        Text(member.name)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                        Text(member.role)
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.top, 10)
+
+                    VStack(spacing: 12) {
+                        sizeRow(icon: "shoeprints.fill", title: "Pointure", value: member.shoeSize ?? "Non renseigné")
+                        sizeRow(icon: "tshirt.fill", title: "Taille Vêtements", value: member.clothingSize ?? "Non renseigné")
+                        sizeRow(icon: "birthday.cake.fill", title: "Gâteau / Friandise", value: member.favouriteTreat ?? "Non renseigné")
+                        if let allergies = member.allergies, !allergies.isEmpty {
+                            sizeRow(icon: "exclamationmark.triangle.fill", title: "Allergies", value: allergies, isWarning: true)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 20)
+
+                    Spacer()
+                }
+            }
+            .navigationTitle("Fiche & Tailles")
+            .navigationBarItems(
+                trailing: Button("Fermer") { selectedMemberForSizes = nil }
+                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+            )
+        }
+    }
+
+    private func sizeRow(icon: String, title: String, value: String, isWarning: Bool = false) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(isWarning ? .red : Color(red: 0.96, green: 0.62, blue: 0.04))
+                .frame(width: 28)
+
+            Text(title)
+                .font(.system(size: 13))
+                .foregroundColor(.gray)
+
+            Spacer()
+
+            Text(value)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(isWarning ? .red : .white)
+        }
+        .padding(.vertical, 4)
     }
 
     private var addMemberSheet: some View {
