@@ -106,10 +106,20 @@ jobs:
               # 3.b Activer la capability Sign In with Apple (APPLE_ID_AUTH)
               begin
                 if bundle_id_resource
-                  puts "Vérification / Activation capability Sign In with Apple..."
+                  puts "Vérification / Activation capability Sign In with Apple avec PRIMARY_APP_CONSENT..."
                   Spaceship::ConnectAPI.post_bundle_id_capability(
                     bundle_id_id: bundle_id_resource.id,
-                    capability_type: "APPLE_ID_AUTH"
+                    capability_type: "APPLE_ID_AUTH",
+                    settings: [
+                      {
+                        key: "APPLE_ID_AUTH_APP_CONSENT",
+                        options: [
+                          {
+                            key: "PRIMARY_APP_CONSENT"
+                          }
+                        ]
+                      }
+                    ]
                   )
                   puts "✅ Capability Sign In with Apple configurée sur Apple Developer !"
                 end
