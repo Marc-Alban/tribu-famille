@@ -230,7 +230,6 @@ struct WishlistView: View {
             let item = WishlistItem(
                 title: newWishTitle.trimmingCharacters(in: .whitespaces),
                 priceEstimate: newWishPrice.isEmpty ? nil : newWishPrice,
-                link: nil,
                 isReservedBy: nil
             )
             storage.members[idx].wishlist.append(item)
