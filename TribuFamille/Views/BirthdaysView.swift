@@ -24,110 +24,204 @@ struct BirthdaysView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
-                // HERO PROCHAIN ANNIVERSAIRE
+                // TITRE ÉCRAN FIGMA STYLE
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("WILLET FAMILY")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.gray)
+                            .tracking(1)
+
+                        Text("Anniversaires & Alertes")
+                            .font(.system(size: 20, weight: .heavy))
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
+
+                    Button(action: {
+                        showAddModal = true
+                    }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+
+                // HERO PROCHAIN ANNIVERSAIRE (FIGMA SCREEN 1)
                 if let next = nextMember {
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            HStack(spacing: 6) {
-                                Image(systemName: "sparkles")
-                                    .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("PROCHAIN ANNIVERSAIRE")
-                                    .font(.system(size: 11, weight: .black))
-                                    .foregroundColor(.orange)
-                            }
-                            Spacer()
-                            Text(next.daysUntilBirthday == 0 ? "AUJOURD'HUI ! 🎂" : "Dans \(next.daysUntilBirthday) jours")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color(red: 0.26, green: 0.22, blue: 0.79))
-                                .cornerRadius(12)
-                        }
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
 
-                        HStack(spacing: 14) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color(red: 0.39, green: 0.40, blue: 0.95))
-                                    .frame(width: 56, height: 56)
-                                Text(String(next.name.prefix(1)))
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(next.name)
-                                    .font(.system(size: 20, weight: .heavy))
+                                Text(next.daysUntilBirthday == 0 ? "AUJOURD'HUI ! 🎂" : "Plus que \(next.daysUntilBirthday) jours !")
+                                    .font(.system(size: 18, weight: .black))
                                     .foregroundColor(.white)
 
-                                Text("Fêtera ses \(next.nextAge) ans (\(next.role))")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color(red: 0.78, green: 0.82, blue: 0.99))
-
-                                Text(next.nextBirthday.formatted(.dateTime.weekday(.wide).day().month(.wide)).capitalized)
-                                    .font(.system(size: 12))
+                                Text("Pensez au gâteau préféré de \(next.name.components(separatedBy: " ").first ?? next.name)")
+                                    .font(.system(size: 11))
                                     .foregroundColor(.gray)
                             }
+
+                            Spacer()
+
+                            ZStack {
+                                Circle()
+                                    .fill(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.2))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "birthday.cake.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            }
                         }
 
-                        HStack(spacing: 10) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    .frame(width: 48, height: 48)
+                                Text(String(next.name.prefix(1)))
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.black)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(next.name)
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+
+                                Text("\(next.role) • Fêtera ses \(next.nextAge) ans")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+
+                                Text("J-\(next.daysUntilBirthday) avant la fête")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.gray)
+                            }
+
+                            Spacer()
+
                             Button(action: {
                                 sendWishMessage(for: next)
                             }) {
-                                HStack {
-                                    Image(systemName: "message.fill")
-                                    Text("Lui Souhaiter")
-                                }
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Color(red: 0.06, green: 0.73, blue: 0.51))
-                                .cornerRadius(12)
-                            }
-
-                            Button(action: {
-                                notifications.sendTestNotification(name: next.name, age: next.nextAge)
-                            }) {
-                                HStack {
-                                    Image(systemName: "bell.fill")
-                                    Text("Tester Alerte")
-                                }
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(Color(red: 0.78, green: 0.82, blue: 0.99))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Color(red: 0.19, green: 0.18, blue: 0.51))
-                                .cornerRadius(12)
+                                Text("Souhaiter")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    .cornerRadius(10)
                             }
                         }
                     }
-                    .padding(18)
-                    .background(Color(red: 0.12, green: 0.11, blue: 0.29))
-                    .cornerRadius(20)
+                    .padding(16)
+                    .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                    .cornerRadius(18)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color(red: 0.22, green: 0.19, blue: 0.64), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.4), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
+                }
+
+                // LISTE DES PROCHAINS À FÊTER
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("À VENIR")
+                                .font(.system(size: 10, weight: .black))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+
+                            Text("Les prochains à fêter")
+                                .font(.system(size: 16, weight: .heavy))
+                                .foregroundColor(.white)
+                        }
+                        Spacer()
+                        Text("\(sortedMembers.count) dates")
+                            .font(.system(size: 11))
+                            .foregroundColor(.gray)
+                    }
+
+                    VStack(spacing: 8) {
+                        ForEach(sortedMembers.dropFirst()) { member in
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(member.isChild ? Color.orange.opacity(0.8) : Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.8))
+                                        .frame(width: 42, height: 42)
+                                    Text(String(member.name.prefix(1)))
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.black)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(member.name)
+                                        .font(.system(size: 15, weight: .bold))
+                                        .foregroundColor(.white)
+
+                                    Text("\(member.role) • \(member.nextAge) ans")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+
+                                    Text("J-\(member.daysUntilBirthday) avant la fête")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                }
+
+                                Spacer()
+
+                                Button(action: {
+                                    sendWishMessage(for: member)
+                                }) {
+                                    Text("Souhaiter")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                        .cornerRadius(8)
+                                }
+                            }
+                            .padding(12)
+                            .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                            )
+                        }
+                    }
+
+                    // BANNIÈRE RAPPELS ACTIVÉS (FIGMA)
+                    HStack(spacing: 10) {
+                        Image(systemName: "bell.badge.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 18))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Rappels activés")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("Une alerte 3 jours avant chaque date et le Jour J à 9h00")
+                                .font(.system(size: 10))
+                                .foregroundColor(.gray)
+                        }
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(Color(red: 0.06, green: 0.18, blue: 0.12))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.green.opacity(0.3), lineWidth: 1)
                     )
                 }
-
-                // LISTE DES ANNIVERSAIRES
-                HStack {
-                    Text("Calendrier de la Famille")
-                        .font(.system(size: 16, weight: .heavy))
-                        .foregroundColor(.white)
-                    Spacer()
-                    Text("\(storage.members.count) membres")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
-                .padding(.top, 6)
-
-                ForEach(sortedMembers) { member in
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(member.isChild ? Color.orange : Color(red: 0.31, green: 0.27, blue: 0.90))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
                                 .frame(width: 44, height: 44)
                             Text(String(member.name.prefix(1)))
                                 .font(.system(size: 18, weight: .bold))

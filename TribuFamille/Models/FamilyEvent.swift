@@ -14,5 +14,7 @@ struct FamilyEvent: Identifiable, Codable, Equatable {
     var date: Date
     var location: String
     var description: String
+    var category: String = "Repas" // "Repas", "Fête", "Vacances", "Garde", "Sortie"
+    var attendeesCount: Int = 12
     var items: [EventTaskItem] = []
 }

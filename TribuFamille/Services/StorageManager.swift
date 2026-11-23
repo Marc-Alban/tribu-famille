@@ -11,6 +11,12 @@ class StorageManager: ObservableObject {
     @Published var quotes: [FamilyQuote] = []
     @Published var contacts: [EmergencyContact] = []
     @Published var posts: [PhotoPost] = []
+    
+    // Auth & Tribu State
+    @Published var currentMember: Member?
+    @Published var tribeCode: String = "WILLET-2026"
+    @Published var tribeName: String = "Willet Family"
+    @Published var isLoggedIn: Bool = true
 
     private let membersFile = "tribu_members.json"
     private let eventsFile = "tribu_events.json"
@@ -18,9 +24,38 @@ class StorageManager: ObservableObject {
     private let quotesFile = "tribu_quotes.json"
     private let contactsFile = "tribu_contacts.json"
     private let postsFile = "tribu_posts.json"
+    private let currentMemberIdKey = "tribu_current_member_id"
 
     init() {
         loadAllData()
+        restoreCurrentMember()
+    }
+
+    func selectMember(_ member: Member) {
+        self.currentMember = member
+        self.isLoggedIn = true
+        UserDefaults.standard.set(member.id.uuidString, forKey: currentMemberIdKey)
+    }
+
+    func logout() {
+        self.currentMember = nil
+        self.isLoggedIn = false
+        UserDefaults.standard.removeObject(forKey: currentMemberIdKey)
+    }
+
+    private func restoreCurrentMember() {
+        if let savedId = UserDefaults.standard.string(forKey: currentMemberIdKey),
+           let uuid = UUID(uuidString: savedId),
+           let found = members.first(where: { $0.id == uuid }) {
+            self.currentMember = found
+            self.isLoggedIn = true
+        } else if let first = members.first(where: { $0.name.contains("Marc-Alban") || $0.name.contains("Papa") }) {
+            self.currentMember = first
+            self.isLoggedIn = true
+        } else {
+            self.currentMember = members.first
+            self.isLoggedIn = self.currentMember != nil
+        }
     }
 
     private func getDocumentsURL() -> URL {
@@ -50,6 +85,9 @@ class StorageManager: ObservableObject {
             var dateMaman = DateComponents(); dateMaman.year = 1970; dateMaman.month = 9; dateMaman.day = 22
             var dateLucas = DateComponents(); dateLucas.year = 2016; dateLucas.month = 12; dateLucas.day = 14
 
+            var dateLea = DateComponents(); dateLea.year = 2017; dateLea.month = 12; dateLea.day = 10
+            var dateThomas = DateComponents(); dateThomas.year = 2012; dateThomas.month = 12; dateThomas.day = 20
+
             self.members = [
                 Member(
                     name: "Mémère Denise",
@@ -64,7 +102,7 @@ class StorageManager: ObservableObject {
                     ]
                 ),
                 Member(
-                    name: "Papa",
+                    name: "Papa (Marc-Alban)",
                     role: "Père",
                     birthDate: calendar.date(from: datePapa) ?? Date(),
                     phone: "0698765432",
@@ -75,7 +113,7 @@ class StorageManager: ObservableObject {
                     ]
                 ),
                 Member(
-                    name: "Maman",
+                    name: "Maman (Camille)",
                     role: "Mère",
                     birthDate: calendar.date(from: dateMaman) ?? Date(),
                     phone: "0611223344",
@@ -85,8 +123,28 @@ class StorageManager: ObservableObject {
                     ]
                 ),
                 Member(
+                    name: "Léa",
+                    role: "Nièce",
+                    birthDate: calendar.date(from: dateLea) ?? Date(),
+                    phone: nil,
+                    isChild: true,
+                    wishlist: [
+                        WishlistItem(title: "Livre illustré contes de fées", priceEstimate: "18€")
+                    ]
+                ),
+                Member(
+                    name: "Thomas",
+                    role: "Cousin",
+                    birthDate: calendar.date(from: dateThomas) ?? Date(),
+                    phone: "0622334455",
+                    isChild: true,
+                    wishlist: [
+                        WishlistItem(title: "Casque audio Bluetooth", priceEstimate: "39€")
+                    ]
+                ),
+                Member(
                     name: "Lucas",
-                    role: "Fils / Petit-fils",
+                    role: "Fils",
                     birthDate: calendar.date(from: dateLucas) ?? Date(),
                     allergies: "Arachides (attention)",
                     isChild: true,
@@ -159,11 +217,15 @@ class StorageManager: ObservableObject {
             self.shoppingItems = decoded
         } else {
             self.shoppingItems = [
-                ShoppingItem(name: "Pain de campagne (2 miches)", category: "Épicerie", quantity: "2", addedByName: "Mémère", isBought: false),
-                ShoppingItem(name: "Lait entier bio & Beurre doux", category: "Frais", quantity: "6L", addedByName: "Maman", isBought: true),
-                ShoppingItem(name: "Clémentines de Corse", category: "Fruits & Légumes", quantity: "2 kg", addedByName: "Marc-Alban", isBought: false),
-                ShoppingItem(name: "Couches bébé taille 4", category: "Bébé", quantity: "1 paquet", addedByName: "Maman", isBought: false),
-                ShoppingItem(name: "Café en grains", category: "Épicerie", quantity: nil, addedByName: "Papa", isBought: true)
+                ShoppingItem(name: "Café moulu", category: "Épicerie", quantity: "1 boîte", addedByName: "Papa", isBought: false),
+                ShoppingItem(name: "Pâtes complètes", category: "Épicerie", quantity: "1 paquet", addedByName: "Camille", isBought: false),
+                ShoppingItem(name: "Chocolat noir pâtissier", category: "Épicerie", quantity: "2 tablettes", addedByName: "Léa", isBought: false),
+                ShoppingItem(name: "Lait demi-écrémé", category: "Frais", quantity: "2 bouteilles", addedByName: "Papa", isBought: false),
+                ShoppingItem(name: "Beurre doux", category: "Frais", quantity: "1 plaquette", addedByName: "Mémère", isBought: true),
+                ShoppingItem(name: "Comté AOP 18 mois", category: "Frais", quantity: "250g", addedByName: "Marc-Alban", isBought: false),
+                ShoppingItem(name: "Pommes Gala bio", category: "Fruits & Légumes", quantity: "1 kg", addedByName: "Maman", isBought: false),
+                ShoppingItem(name: "Poireaux nouveaux", category: "Fruits & Légumes", quantity: "1 botte", addedByName: "Maman", isBought: false),
+                ShoppingItem(name: "Clémentines de Corse", category: "Fruits & Légumes", quantity: "1 kg", addedByName: "Thomas", isBought: false)
             ]
             saveShopping()
         }
@@ -184,6 +246,13 @@ class StorageManager: ObservableObject {
             self.quotes = decoded
         } else {
             self.quotes = [
+                FamilyQuote(
+                    quoteText: "Mémère, elle fait les meilleurs câlins du monde entier.",
+                    authorName: "Léo (6 ans)",
+                    context: "Dimanche dernier",
+                    dateString: "Novembre 2026",
+                    likesCount: 12
+                ),
                 FamilyQuote(
                     quoteText: "Mémère, est-ce que le Père Noël il a des lunettes pour voir s'il y a du verglas sur le toit ?",
                     authorName: "Lucas (5 ans)",
