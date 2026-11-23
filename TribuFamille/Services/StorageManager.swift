@@ -399,7 +399,8 @@ class StorageManager: ObservableObject {
         phone: String? = nil,
         shoeSize: String? = nil,
         clothingSize: String? = nil,
-        favouriteTreat: String? = nil
+        favouriteTreat: String? = nil,
+        allergies: String? = nil
     ) {
         guard var current = currentMember else { return }
         current.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -411,6 +412,7 @@ class StorageManager: ObservableObject {
         current.shoeSize = shoeSize
         current.clothingSize = clothingSize
         current.favouriteTreat = favouriteTreat
+        current.allergies = allergies
 
         self.currentMember = current
         if let idx = members.firstIndex(where: { $0.id == current.id }) {
@@ -421,6 +423,19 @@ class StorageManager: ObservableObject {
 
         saveSession()
         saveMembers()
+    }
+
+    func updateTribeSettings(name: String, password: String) {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cleanName.isEmpty {
+            self.tribeName = cleanName
+        }
+        if !cleanPassword.isEmpty {
+            self.tribePassword = cleanPassword
+        }
+        saveSession()
+        syncWithCloud()
     }
 
     // MARK: - Synchronisation Cloud Bidirectionnelle
@@ -583,6 +598,11 @@ class StorageManager: ObservableObject {
             events[idx] = event
             saveEvents()
         }
+    }
+
+    func deleteEvent(_ event: FamilyEvent) {
+        events.removeAll(where: { $0.id == event.id })
+        saveEvents()
     }
 
     // MARK: - Shopping

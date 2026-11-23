@@ -233,9 +233,18 @@ struct UserProfileSheet: View {
     @State private var editShoeSize = ""
     @State private var editClothingSize = ""
     @State private var editFavouriteTreat = ""
+    @State private var editAllergies = ""
+    @State private var editTribeName = ""
+    @State private var editTribePassword = ""
+    @State private var showSavedAlert = false
     @State private var showLogoutConfirm = false
     @State private var showDeleteAccountConfirm = false
     @State private var showShareModal = false
+    @State private var showJoinOtherSheet = false
+    @State private var otherTribeCode = ""
+    @State private var otherTribePassword = ""
+    @State private var joinErrorMessage: String? = nil
+    @State private var isJoining = false
 
     private let rolesList = ["Père", "Mère", "Fils", "Fille", "Grand-mère", "Grand-père", "Tante", "Oncle", "Cousin", "Cousine", "Ami(e)"]
 
@@ -312,17 +321,7 @@ struct UserProfileSheet: View {
                                 customTextField(title: "Ma Pointure de chaussures", text: $editShoeSize, placeholder: "Ex: 42")
                                 customTextField(title: "Ma Taille de vêtements", text: $editClothingSize, placeholder: "Ex: M, 38, L...")
                                 customTextField(title: "Mon Péché mignon / Douceur", text: $editFavouriteTreat, placeholder: "Ex: Chocolat praliné, Tarte tatin...")
-
-                                Button(action: saveProfile) {
-                                    Text("Enregistrer mes modifications")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundColor(.black)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                        .cornerRadius(10)
-                                }
-                                .padding(.top, 4)
+                                customTextField(title: "Allergies & Préférences", text: $editAllergies, placeholder: "Ex: Sans gluten, Végétarien, Noix...")
                             }
                         }
                         .padding(16)
@@ -331,45 +330,63 @@ struct UserProfileSheet: View {
                         .padding(.horizontal, 16)
 
                         // SECTION 2 : NOTRE TRIBU FAMILLE
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("NOTRE TRIBU FAMILLE")
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("PARAMÈTRES DE NOTRE TRIBU FAMILLE")
                                 .font(.system(size: 11, weight: .black))
                                 .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                                 .tracking(1)
 
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack {
-                                    Text("Nom de la Tribu :")
-                                        .foregroundColor(.gray)
-                                    Spacer()
-                                    Text(storage.tribeName)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                }
+                            VStack(spacing: 12) {
+                                customTextField(title: "Nom de la Tribu", text: $editTribeName)
 
                                 HStack {
-                                    Text("Code Famille :")
-                                        .foregroundColor(.gray)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Code Famille de partage")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(.gray)
+                                        Text(storage.tribeCode)
+                                            .font(.system(.subheadline, design: .monospaced))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    }
                                     Spacer()
-                                    Text(storage.tribeCode)
-                                        .font(.system(.body, design: .monospaced))
-                                        .fontWeight(.bold)
+                                    Button(action: {
+                                        UIPasteboard.general.string = storage.tribeCode
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "doc.on.doc")
+                                            Text("Copier")
+                                        }
+                                        .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.15))
+                                        .cornerRadius(8)
+                                    }
                                 }
+                                .padding(12)
+                                .background(Color(red: 0.06, green: 0.08, blue: 0.13))
+                                .cornerRadius(8)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
 
-                                HStack {
-                                    Text("Mot de passe secret :")
-                                        .foregroundColor(.gray)
-                                    Spacer()
-                                    Text(storage.tribePassword)
-                                        .font(.system(.body, design: .monospaced))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.green)
+                                customTextField(title: "Mot de passe secret de la Tribu", text: $editTribePassword, placeholder: "Mot de passe")
+
+                                Button(action: {
+                                    showJoinOtherSheet = true
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "person.2.badge.gearshape")
+                                        Text("Rejoindre ou basculer vers une autre Tribu...")
+                                    }
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
                                 }
+                                .padding(.top, 4)
 
                                 Divider().background(Color(red: 0.14, green: 0.20, blue: 0.28))
 
-                                Text("Membres inscrits (\(storage.members.count)) :")
+                                Text("Membres de la tribu (\(storage.members.count)) :")
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundColor(.white)
 
@@ -412,6 +429,22 @@ struct UserProfileSheet: View {
                         .cornerRadius(16)
                         .padding(.horizontal, 16)
 
+                        // BOUTON ENREGISTRER TOUT
+                        Button(action: saveAllChanges) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Enregistrer les modifications")
+                            }
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            .cornerRadius(12)
+                            .shadow(color: Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.3), radius: 8)
+                        }
+                        .padding(.horizontal, 16)
+
                         // BOUTON DÉCONNEXION
                         Button(action: {
                             showLogoutConfirm = true
@@ -449,11 +482,21 @@ struct UserProfileSheet: View {
                     }
                 }
             }
-            .navigationBarTitle("Mon Profil", displayMode: .inline)
-            .navigationBarItems(trailing: Button("Fermer") {
-                presentationMode.wrappedValue.dismiss()
-            })
+            .navigationBarTitle("Mon Profil & Réglages", displayMode: .inline)
+            .navigationBarItems(
+                leading: Button("Enregistrer") {
+                    saveAllChanges()
+                }.foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04)).fontWeight(.bold),
+                trailing: Button("Fermer") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
             .onAppear(perform: loadCurrentData)
+            .alert("Modifications enregistrées", isPresented: $showSavedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Vos informations personnelles et paramètres de tribu ont bien été mis à jour.")
+            }
             .alert("Confirmer la déconnexion", isPresented: $showLogoutConfirm) {
                 Button("Annuler", role: .cancel) {}
                 Button("Déconnexion", role: .destructive) {
@@ -472,6 +515,91 @@ struct UserProfileSheet: View {
             } message: {
                 Text("Conformément au RGPD et aux règles Apple, votre profil et toutes vos données associées seront définitivement supprimés.")
             }
+            .sheet(isPresented: $showJoinOtherSheet) {
+                joinOtherTribeView
+            }
+        }
+    }
+
+    private var joinOtherTribeView: some View {
+        NavigationView {
+            ZStack {
+                Color(red: 0.07, green: 0.09, blue: 0.15).ignoresSafeArea()
+                VStack(spacing: 20) {
+                    Text("Rejoindre une Tribu existante")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text("Entrez le code famille et le mot de passe partagés par un membre de votre famille.")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    VStack(spacing: 12) {
+                        customTextField(title: "Code Famille", text: $otherTribeCode, placeholder: "Ex: MILLET-2026")
+                        customTextField(title: "Mot de passe secret", text: $otherTribePassword, placeholder: "Mot de passe")
+                    }
+                    .padding(.horizontal)
+
+                    if let err = joinErrorMessage {
+                        Text(err)
+                            .font(.footnote)
+                            .foregroundColor(.red)
+                    }
+
+                    Button(action: handleJoinOtherTribe) {
+                        if isJoining {
+                            ProgressView().tint(.black)
+                        } else {
+                            Text("Rejoindre cette Tribu")
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .disabled(isJoining || otherTribeCode.isEmpty)
+
+                    Spacer()
+                }
+                .padding(.top, 24)
+            }
+            .navigationBarTitle("Rejoindre une Tribu", displayMode: .inline)
+            .navigationBarItems(trailing: Button("Annuler") { showJoinOtherSheet = false })
+        }
+    }
+
+    private func handleJoinOtherTribe() {
+        guard !otherTribeCode.isEmpty else { return }
+        isJoining = true
+        joinErrorMessage = nil
+        Task {
+            do {
+                try await storage.joinFamily(
+                    code: otherTribeCode,
+                    password: otherTribePassword,
+                    userName: editName.isEmpty ? (storage.currentMember?.name ?? "Membre") : editName,
+                    userRole: editRole,
+                    birthDate: editBirthDate,
+                    shoeSize: editShoeSize.isEmpty ? nil : editShoeSize,
+                    clothingSize: editClothingSize.isEmpty ? nil : editClothingSize,
+                    favouriteTreat: editFavouriteTreat.isEmpty ? nil : editFavouriteTreat,
+                    phone: editPhone.isEmpty ? nil : editPhone
+                )
+                await MainActor.run {
+                    isJoining = false
+                    showJoinOtherSheet = false
+                    presentationMode.wrappedValue.dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isJoining = false
+                    joinErrorMessage = "Impossible de rejoindre : vérifiez le code et le mot de passe."
+                }
+            }
         }
     }
 
@@ -484,10 +612,13 @@ struct UserProfileSheet: View {
             editShoeSize = current.shoeSize ?? ""
             editClothingSize = current.clothingSize ?? ""
             editFavouriteTreat = current.favouriteTreat ?? ""
+            editAllergies = current.allergies ?? ""
         }
+        editTribeName = storage.tribeName
+        editTribePassword = storage.tribePassword
     }
 
-    private func saveProfile() {
+    private func saveAllChanges() {
         storage.updateCurrentMember(
             name: editName,
             role: editRole,
@@ -495,9 +626,11 @@ struct UserProfileSheet: View {
             phone: editPhone.isEmpty ? nil : editPhone,
             shoeSize: editShoeSize.isEmpty ? nil : editShoeSize,
             clothingSize: editClothingSize.isEmpty ? nil : editClothingSize,
-            favouriteTreat: editFavouriteTreat.isEmpty ? nil : editFavouriteTreat
+            favouriteTreat: editFavouriteTreat.isEmpty ? nil : editFavouriteTreat,
+            allergies: editAllergies.isEmpty ? nil : editAllergies
         )
-        presentationMode.wrappedValue.dismiss()
+        storage.updateTribeSettings(name: editTribeName, password: editTribePassword)
+        showSavedAlert = true
     }
 
     private func customTextField(title: String, text: Binding<String>, placeholder: String = "") -> some View {
