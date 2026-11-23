@@ -66,7 +66,31 @@ struct WishlistView: View {
                 .padding(.horizontal, 16)
 
                 // LISTE DES MEMBRES ET LEURS SOUHAITS
-                ForEach(storage.members) { member in
+                if storage.members.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "gift")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        Text("Aucun membre dans la tribu")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Invitez vos proches à rejoindre la tribu pour partager leurs idées cadeaux et préparer les surprises en secret !")
+                            .font(.system(size: 13))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 36)
+                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    .cornerRadius(18)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
+                } else {
+                    ForEach(storage.members) { member in
                     VStack(alignment: .leading, spacing: 12) {
                         // Header Membre
                         HStack(spacing: 10) {
@@ -198,6 +222,7 @@ struct WishlistView: View {
                     )
                     .padding(.horizontal, 16)
                 }
+            }
             }
             .padding(.bottom, 40)
         }

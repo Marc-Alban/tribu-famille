@@ -69,10 +69,10 @@ struct EventsView: View {
                         HStack(spacing: 14) {
                             // BADGE DATE ORANGE
                             VStack(spacing: 2) {
-                                Text("DÉC.")
+                                Text(eventMonthString(event.date))
                                     .font(.system(size: 10, weight: .black))
                                     .foregroundColor(.black)
-                                Text("24")
+                                Text(eventDayString(event.date))
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(.black)
                             }
@@ -81,7 +81,7 @@ struct EventsView: View {
                             .cornerRadius(14)
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("MARDI • 19H30")
+                                Text(eventTimeString(event.date))
                                     .font(.system(size: 10, weight: .black))
                                     .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
 
@@ -235,6 +235,44 @@ struct EventsView: View {
                             }
                             .padding(.top, 4)
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 24)
+                    } else {
+                        // ÉTAT VIDE REPAS & ÉVÉNEMENTS
+                        VStack(spacing: 16) {
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.system(size: 40))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            Text("Aucun événement planifié")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("Créez le prochain repas de fête, réveillon ou rassemblement pour organiser qui apporte quoi !")
+                                .font(.system(size: 13))
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+
+                            Button(action: { showAddEventModal = true }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus")
+                                    Text("Créer un événement")
+                                }
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                .cornerRadius(12)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 36)
+                        .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                        .cornerRadius(18)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                        )
                         .padding(.horizontal, 16)
                         .padding(.bottom, 24)
                     }
@@ -553,5 +591,25 @@ struct EventsView: View {
         storage.events[eventIdx].items[itemIdx].isCompleted = !current
         storage.events[eventIdx].items[itemIdx].assignedToName = (!current) ? myName : nil
         storage.saveEvents()
+    }
+
+    private func eventMonthString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "MMM"
+        return f.string(from: date).uppercased()
+    }
+
+    private func eventDayString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "dd"
+        return f.string(from: date)
+    }
+
+    private func eventTimeString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEEE • HH'h'mm"
+        return f.string(from: date).uppercased()
     }
 }

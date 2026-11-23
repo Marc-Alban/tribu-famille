@@ -21,6 +21,7 @@
 		AA01000C2CE800010000000C /* WishlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA02000C2CE800010000000C /* WishlistView.swift */; };
 		AA01000D2CE800010000000D /* GazetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA02000D2CE800010000000D /* GazetteView.swift */; };
 		AA01000E2CE800010000000E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA02000E2CE800010000000E /* Assets.xcassets */; };
+		AA0100102CE8000100000010 /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0200102CE8000100000010 /* CloudSyncService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 		AA02000D2CE800010000000D /* GazetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazetteView.swift; sourceTree = "<group>"; };
 		AA02000E2CE800010000000E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA02000F2CE800010000000F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0200102CE8000100000010 /* CloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +92,7 @@
 			children = (
 				AA0200062CE8000100000006 /* NotificationManager.swift */,
 				AA0200072CE8000100000007 /* StorageManager.swift */,
+				AA0200102CE8000100000010 /* CloudSyncService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -197,6 +200,7 @@
 				AA01000B2CE800010000000B /* ShoppingView.swift in Sources */,
 				AA01000C2CE800010000000C /* WishlistView.swift in Sources */,
 				AA01000D2CE800010000000D /* GazetteView.swift in Sources */,
+				AA0100102CE8000100000010 /* CloudSyncService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,7 +220,7 @@
 				CODE_SIGN_STYLE = Manual;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = NTNAWJQ2N3;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -249,7 +253,7 @@
 				CODE_SIGN_STYLE = Manual;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = NTNAWJQ2N3;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

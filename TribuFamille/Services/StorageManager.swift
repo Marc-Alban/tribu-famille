@@ -1,10 +1,12 @@
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 class StorageManager: ObservableObject {
     static let shared = StorageManager()
 
+    // MARK: - Published State
     @Published var members: [Member] = []
     @Published var events: [FamilyEvent] = []
     @Published var shoppingItems: [ShoppingItem] = []
@@ -14,9 +16,12 @@ class StorageManager: ObservableObject {
     
     // Auth & Tribu State
     @Published var currentMember: Member?
-    @Published var tribeCode: String = "WILLET-2026"
-    @Published var tribeName: String = "Willet Family"
-    @Published var isLoggedIn: Bool = true
+    @Published var tribeCode: String = ""
+    @Published var tribeName: String = ""
+    @Published var tribePassword: String = ""
+    @Published var isLoggedIn: Bool = false
+    @Published var isSyncing: Bool = false
+    @Published var syncError: String? = nil
 
     private let membersFile = "tribu_members.json"
     private let eventsFile = "tribu_events.json"
@@ -24,50 +29,266 @@ class StorageManager: ObservableObject {
     private let quotesFile = "tribu_quotes.json"
     private let contactsFile = "tribu_contacts.json"
     private let postsFile = "tribu_posts.json"
-    private let currentMemberIdKey = "tribu_current_member_id"
+    
+    private let loggedInKey = "tribu_is_logged_in"
+    private let currentMemberKey = "tribu_current_member_data"
+    private let tribeCodeKey = "tribu_family_code"
+    private let tribeNameKey = "tribu_family_name"
+    private let tribePasswordKey = "tribu_family_password"
 
     init() {
-        loadAllData()
-        restoreCurrentMember()
+        restoreSession()
+        loadAllLocalData()
+        
+        if isLoggedIn && !tribeCode.isEmpty {
+            Task {
+                await pullFromCloud()
+            }
+        }
     }
 
-    func selectMember(_ member: Member) {
-        self.currentMember = member
-        self.isLoggedIn = true
-        UserDefaults.standard.set(member.id, forKey: currentMemberIdKey)
+    // MARK: - Session & Identity
+    private func restoreSession() {
+        self.isLoggedIn = UserDefaults.standard.bool(forKey: loggedInKey)
+        self.tribeCode = UserDefaults.standard.string(forKey: tribeCodeKey) ?? ""
+        self.tribeName = UserDefaults.standard.string(forKey: tribeNameKey) ?? ""
+        self.tribePassword = UserDefaults.standard.string(forKey: tribePasswordKey) ?? ""
+
+        if let data = UserDefaults.standard.data(forKey: currentMemberKey),
+           let decoded = try? JSONDecoder().decode(Member.self, from: data) {
+            self.currentMember = decoded
+        }
+    }
+
+    func saveSession() {
+        UserDefaults.standard.set(isLoggedIn, forKey: loggedInKey)
+        UserDefaults.standard.set(tribeCode, forKey: tribeCodeKey)
+        UserDefaults.standard.set(tribeName, forKey: tribeNameKey)
+        UserDefaults.standard.set(tribePassword, forKey: tribePasswordKey)
+
+        if let member = currentMember, let encoded = try? JSONEncoder().encode(member) {
+            UserDefaults.standard.set(encoded, forKey: currentMemberKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: currentMemberKey)
+        }
     }
 
     func logout() {
         self.currentMember = nil
         self.isLoggedIn = false
-        UserDefaults.standard.removeObject(forKey: currentMemberIdKey)
+        self.tribeCode = ""
+        self.tribeName = ""
+        self.tribePassword = ""
+        self.members = []
+        self.events = []
+        self.shoppingItems = []
+        self.quotes = []
+        self.contacts = []
+        
+        UserDefaults.standard.removeObject(forKey: loggedInKey)
+        UserDefaults.standard.removeObject(forKey: currentMemberKey)
+        UserDefaults.standard.removeObject(forKey: tribeCodeKey)
+        UserDefaults.standard.removeObject(forKey: tribeNameKey)
+        UserDefaults.standard.removeObject(forKey: tribePasswordKey)
+        
+        // Supprimer aussi les fichiers locaux de cache
+        deleteLocalData()
     }
 
-    private func restoreCurrentMember() {
-        if let savedId = UserDefaults.standard.string(forKey: currentMemberIdKey),
-           let found = members.first(where: { $0.id == savedId }) {
-            self.currentMember = found
-            self.isLoggedIn = true
-        } else if let first = members.first(where: { $0.name.contains("Marc-Alban") || $0.name.contains("Papa") }) {
-            self.currentMember = first
-            self.isLoggedIn = true
+    // MARK: - Onboarding : Créer une Tribu
+    func createFamily(
+        name: String,
+        code: String,
+        password: String,
+        creatorName: String,
+        creatorRole: String,
+        birthDate: Date = Date(),
+        shoeSize: String? = nil,
+        clothingSize: String? = nil,
+        favouriteTreat: String? = nil,
+        phone: String? = nil
+    ) async throws {
+        let newMember = Member(
+            name: creatorName.trimmingCharacters(in: .whitespacesAndNewlines),
+            role: creatorRole,
+            birthDate: birthDate,
+            phone: phone,
+            isChild: creatorRole.contains("Enfant") || creatorRole.contains("Fils") || creatorRole.contains("Fille"),
+            shoeSize: shoeSize,
+            clothingSize: clothingSize,
+            favouriteTreat: favouriteTreat
+        )
+
+        let payload = try await CloudSyncService.shared.createFamily(
+            name: name,
+            code: code,
+            password: password,
+            creator: newMember
+        )
+
+        // Appliquer l'état local
+        self.currentMember = newMember
+        self.tribeCode = payload.code
+        self.tribeName = payload.name
+        self.tribePassword = payload.password
+        self.isLoggedIn = true
+        self.members = payload.members
+        self.events = payload.events
+        self.shoppingItems = payload.shoppingItems
+        self.quotes = payload.quotes
+        self.contacts = payload.contacts
+
+        saveSession()
+        saveAllLocalData()
+    }
+
+    // MARK: - Onboarding : Rejoindre une Tribu
+    func joinFamily(
+        code: String,
+        password: String,
+        userName: String,
+        userRole: String,
+        birthDate: Date = Date(),
+        shoeSize: String? = nil,
+        clothingSize: String? = nil,
+        favouriteTreat: String? = nil,
+        phone: String? = nil
+    ) async throws {
+        let member = Member(
+            name: userName.trimmingCharacters(in: .whitespacesAndNewlines),
+            role: userRole,
+            birthDate: birthDate,
+            phone: phone,
+            isChild: userRole.contains("Enfant") || userRole.contains("Fils") || userRole.contains("Fille"),
+            shoeSize: shoeSize,
+            clothingSize: clothingSize,
+            favouriteTreat: favouriteTreat
+        )
+
+        let payload = try await CloudSyncService.shared.joinFamily(
+            code: code,
+            password: password,
+            member: member
+        )
+
+        self.currentMember = member
+        self.tribeCode = payload.code
+        self.tribeName = payload.name
+        self.tribePassword = payload.password
+        self.isLoggedIn = true
+        self.members = payload.members
+        self.events = payload.events
+        self.shoppingItems = payload.shoppingItems
+        self.quotes = payload.quotes
+        self.contacts = payload.contacts
+
+        saveSession()
+        saveAllLocalData()
+    }
+
+    // MARK: - Mise à jour du Profil Personnel
+    func updateCurrentMember(
+        name: String,
+        role: String,
+        phone: String?,
+        shoeSize: String?,
+        clothingSize: String?,
+        favouriteTreat: String?
+    ) {
+        guard var current = currentMember else { return }
+        current.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        current.role = role
+        current.phone = phone
+        current.shoeSize = shoeSize
+        current.clothingSize = clothingSize
+        current.favouriteTreat = favouriteTreat
+
+        self.currentMember = current
+        if let idx = members.firstIndex(where: { $0.id == current.id }) {
+            members[idx] = current
         } else {
-            self.currentMember = members.first
-            self.isLoggedIn = self.currentMember != nil
+            members.append(current)
+        }
+
+        saveSession()
+        saveMembers()
+        syncWithCloud()
+    }
+
+    // MARK: - Synchronisation Cloud Bidirectionnelle
+    func pullFromCloud() async {
+        guard !tribeCode.isEmpty else { return }
+        self.isSyncing = true
+        do {
+            if let payload = try await CloudSyncService.shared.fetchFamily(code: tribeCode) {
+                self.tribeName = payload.name
+                self.members = payload.members
+                self.events = payload.events
+                self.shoppingItems = payload.shoppingItems
+                self.quotes = payload.quotes
+                self.contacts = payload.contacts
+                saveAllLocalData()
+            }
+            self.isSyncing = false
+            self.syncError = nil
+        } catch {
+            self.isSyncing = false
+            self.syncError = error.localizedDescription
+            print("Erreur de synchronisation pull: \(error)")
         }
     }
 
+    func syncWithCloud() {
+        guard !tribeCode.isEmpty else { return }
+        let payload = FamilyPayload(
+            code: tribeCode,
+            name: tribeName,
+            password: tribePassword,
+            members: members,
+            events: events,
+            shoppingItems: shoppingItems,
+            quotes: quotes,
+            contacts: contacts,
+            updatedAt: Date()
+        )
+
+        Task {
+            do {
+                try await CloudSyncService.shared.saveFamily(payload: payload)
+            } catch {
+                print("Erreur de synchronisation push: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Local File Storage (Documents)
     private func getDocumentsURL() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
-    func loadAllData() {
+    func loadAllLocalData() {
         loadMembers()
         loadEvents()
         loadShopping()
         loadQuotes()
         loadContacts()
-        loadPosts()
+    }
+
+    func saveAllLocalData() {
+        saveMembers()
+        saveEvents()
+        saveShopping()
+        saveQuotes()
+        saveContacts()
+    }
+
+    private func deleteLocalData() {
+        let fm = FileManager.default
+        let dir = getDocumentsURL()
+        [membersFile, eventsFile, shoppingFile, quotesFile, contactsFile, postsFile].forEach { file in
+            let path = dir.appendingPathComponent(file)
+            try? fm.removeItem(at: path)
+        }
     }
 
     // MARK: - Members
@@ -77,99 +298,7 @@ class StorageManager: ObservableObject {
            let decoded = try? JSONDecoder().decode([Member].self, from: data) {
             self.members = decoded
         } else {
-            // Initial Seed Data
-            let calendar = Calendar.current
-            var dateMemere = DateComponents(); dateMemere.year = 1942; dateMemere.month = 12; dateMemere.day = 5
-            var datePapa = DateComponents(); datePapa.year = 1968; datePapa.month = 4; datePapa.day = 18
-            var dateMaman = DateComponents(); dateMaman.year = 1970; dateMaman.month = 9; dateMaman.day = 22
-            var dateLucas = DateComponents(); dateLucas.year = 2016; dateLucas.month = 12; dateLucas.day = 14
-
-            var dateLea = DateComponents(); dateLea.year = 2017; dateLea.month = 12; dateLea.day = 10
-            var dateThomas = DateComponents(); dateThomas.year = 2012; dateThomas.month = 12; dateThomas.day = 20
-
-            self.members = [
-                Member(
-                    name: "Mémère Denise",
-                    role: "Grand-mère",
-                    birthDate: calendar.date(from: dateMemere) ?? Date(),
-                    phone: "0612345678",
-                    allergies: nil,
-                    isChild: false,
-                    wishlist: [
-                        WishlistItem(title: "Charentaises chaudes (taille 38)", priceEstimate: "35€"),
-                        WishlistItem(title: "Boîte de chocolats fins pralinés", priceEstimate: "20€", isReservedBy: "Marc-Alban")
-                    ],
-                    shoeSize: "38",
-                    clothingSize: "M",
-                    favouriteTreat: "Tarte Tatin"
-                ),
-                Member(
-                    name: "Papa (Marc-Alban)",
-                    role: "Père",
-                    birthDate: calendar.date(from: datePapa) ?? Date(),
-                    phone: "0698765432",
-                    isChild: false,
-                    wishlist: [
-                        WishlistItem(title: "Livre d'histoire économique et bourse", priceEstimate: "24€"),
-                        WishlistItem(title: "Set de couteaux japonais", priceEstimate: "75€")
-                    ],
-                    shoeSize: "43",
-                    clothingSize: "L"
-                ),
-                Member(
-                    name: "Maman (Camille)",
-                    role: "Mère",
-                    birthDate: calendar.date(from: dateMaman) ?? Date(),
-                    phone: "0611223344",
-                    isChild: false,
-                    wishlist: [
-                        WishlistItem(title: "Écharpe cachemire beige", priceEstimate: "50€", isReservedBy: "Papa")
-                    ],
-                    shoeSize: "38",
-                    clothingSize: "S"
-                ),
-                Member(
-                    name: "Léa",
-                    role: "Nièce",
-                    birthDate: calendar.date(from: dateLea) ?? Date(),
-                    phone: nil,
-                    isChild: true,
-                    wishlist: [
-                        WishlistItem(title: "Livre illustré contes de fées", priceEstimate: "18€")
-                    ],
-                    shoeSize: "32",
-                    clothingSize: "10 ans",
-                    favouriteTreat: "Chocolat au lait"
-                ),
-                Member(
-                    name: "Thomas",
-                    role: "Cousin",
-                    birthDate: calendar.date(from: dateThomas) ?? Date(),
-                    phone: "0622334455",
-                    isChild: true,
-                    wishlist: [
-                        WishlistItem(title: "Casque audio Bluetooth", priceEstimate: "39€")
-                    ],
-                    shoeSize: "39",
-                    clothingSize: "14 ans",
-                    favouriteTreat: "Marrons glacés"
-                ),
-                Member(
-                    name: "Lucas",
-                    role: "Fils",
-                    birthDate: calendar.date(from: dateLucas) ?? Date(),
-                    allergies: "Arachides (attention)",
-                    isChild: true,
-                    wishlist: [
-                        WishlistItem(title: "Lego Vaisseau spatial", priceEstimate: "45€"),
-                        WishlistItem(title: "Jeu Switch Pokémon", priceEstimate: "49€", isReservedBy: "Mémère Denise")
-                    ],
-                    shoeSize: "28",
-                    clothingSize: "6 ans",
-                    favouriteTreat: "Bonbons gélifiés"
-                )
-            ]
-            saveMembers()
+            self.members = []
         }
     }
 
@@ -184,6 +313,7 @@ class StorageManager: ObservableObject {
     func addMember(_ member: Member) {
         members.append(member)
         saveMembers()
+        syncWithCloud()
     }
 
     // MARK: - Events
@@ -193,27 +323,7 @@ class StorageManager: ObservableObject {
            let decoded = try? JSONDecoder().decode([FamilyEvent].self, from: data) {
             self.events = decoded
         } else {
-            let calendar = Calendar.current
-            var noelComp = DateComponents(); noelComp.year = 2026; noelComp.month = 12; noelComp.day = 24; noelComp.hour = 19; noelComp.minute = 30
-            let noelDate = calendar.date(from: noelComp) ?? Date()
-
-            self.events = [
-                FamilyEvent(
-                    title: "Grand Réveillon de Noël 2026 🎄",
-                    date: noelDate,
-                    location: "Chez Mémère Denise",
-                    description: "Chacun ramène sa spécialité ! Touchez pour réserver un plat.",
-                    items: [
-                        EventTaskItem(title: "Apéritif & Toasts au saumon fumé", category: "Apéritif", assignedToName: "Marc-Alban", isCompleted: true),
-                        EventTaskItem(title: "Foie Gras maison & Pain d'épices", category: "Entrée", assignedToName: "Papa", isCompleted: true),
-                        EventTaskItem(title: "Chapon rôti & Marrons chauds", category: "Plat", assignedToName: "Mémère Denise", isCompleted: true),
-                        EventTaskItem(title: "Plateau de 5 fromages de nos régions", category: "Fromage", assignedToName: nil, isCompleted: false),
-                        EventTaskItem(title: "Bûche Pâtissière Chocolat-Praliné", category: "Dessert", assignedToName: "Maman", isCompleted: true),
-                        EventTaskItem(title: "Champagne brut & Bulles de fête", category: "Boisson", assignedToName: nil, isCompleted: false)
-                    ]
-                )
-            ]
-            saveEvents()
+            self.events = []
         }
     }
 
@@ -224,6 +334,20 @@ class StorageManager: ObservableObject {
         }
     }
 
+    func addEvent(_ event: FamilyEvent) {
+        events.append(event)
+        saveEvents()
+        syncWithCloud()
+    }
+
+    func updateEvent(_ event: FamilyEvent) {
+        if let idx = events.firstIndex(where: { $0.id == event.id }) {
+            events[idx] = event
+            saveEvents()
+            syncWithCloud()
+        }
+    }
+
     // MARK: - Shopping
     private func loadShopping() {
         let url = getDocumentsURL().appendingPathComponent(shoppingFile)
@@ -231,18 +355,7 @@ class StorageManager: ObservableObject {
            let decoded = try? JSONDecoder().decode([ShoppingItem].self, from: data) {
             self.shoppingItems = decoded
         } else {
-            self.shoppingItems = [
-                ShoppingItem(name: "Café moulu", category: "Épicerie", quantity: "1 boîte", addedByName: "Papa", isBought: false),
-                ShoppingItem(name: "Pâtes complètes", category: "Épicerie", quantity: "1 paquet", addedByName: "Camille", isBought: false),
-                ShoppingItem(name: "Chocolat noir pâtissier", category: "Épicerie", quantity: "2 tablettes", addedByName: "Léa", isBought: false),
-                ShoppingItem(name: "Lait demi-écrémé", category: "Frais", quantity: "2 bouteilles", addedByName: "Papa", isBought: false),
-                ShoppingItem(name: "Beurre doux", category: "Frais", quantity: "1 plaquette", addedByName: "Mémère", isBought: true),
-                ShoppingItem(name: "Comté AOP 18 mois", category: "Frais", quantity: "250g", addedByName: "Marc-Alban", isBought: false),
-                ShoppingItem(name: "Pommes Gala bio", category: "Fruits & Légumes", quantity: "1 kg", addedByName: "Maman", isBought: false),
-                ShoppingItem(name: "Poireaux nouveaux", category: "Fruits & Légumes", quantity: "1 botte", addedByName: "Maman", isBought: false),
-                ShoppingItem(name: "Clémentines de Corse", category: "Fruits & Légumes", quantity: "1 kg", addedByName: "Thomas", isBought: false)
-            ]
-            saveShopping()
+            self.shoppingItems = []
         }
     }
 
@@ -253,6 +366,48 @@ class StorageManager: ObservableObject {
         }
     }
 
+    func addShoppingItem(_ item: ShoppingItem) {
+        shoppingItems.append(item)
+        saveShopping()
+        syncWithCloud()
+    }
+
+    func toggleShoppingItem(_ item: ShoppingItem) {
+        if let idx = shoppingItems.firstIndex(where: { $0.id == item.id }) {
+            shoppingItems[idx].isBought.toggle()
+            saveShopping()
+            syncWithCloud()
+        }
+    }
+
+    func deleteShoppingItem(_ item: ShoppingItem) {
+        shoppingItems.removeAll(where: { $0.id == item.id })
+        saveShopping()
+        syncWithCloud()
+    }
+
+    // MARK: - Wishlist
+    func addWish(to memberId: String, wish: WishlistItem) {
+        if let idx = members.firstIndex(where: { $0.id == memberId }) {
+            members[idx].wishlist.append(wish)
+            saveMembers()
+            syncWithCloud()
+        }
+    }
+
+    func toggleReserveWish(for memberId: String, wishId: String, by reservedByName: String) {
+        if let mIdx = members.firstIndex(where: { $0.id == memberId }),
+           let wIdx = members[mIdx].wishlist.firstIndex(where: { $0.id == wishId }) {
+            if members[mIdx].wishlist[wIdx].isReservedBy == nil {
+                members[mIdx].wishlist[wIdx].isReservedBy = reservedByName
+            } else if members[mIdx].wishlist[wIdx].isReservedBy == reservedByName {
+                members[mIdx].wishlist[wIdx].isReservedBy = nil
+            }
+            saveMembers()
+            syncWithCloud()
+        }
+    }
+
     // MARK: - Quotes
     private func loadQuotes() {
         let url = getDocumentsURL().appendingPathComponent(quotesFile)
@@ -260,30 +415,7 @@ class StorageManager: ObservableObject {
            let decoded = try? JSONDecoder().decode([FamilyQuote].self, from: data) {
             self.quotes = decoded
         } else {
-            self.quotes = [
-                FamilyQuote(
-                    quoteText: "Mémère, elle fait les meilleurs câlins du monde entier.",
-                    authorName: "Léo (6 ans)",
-                    context: "Dimanche dernier",
-                    dateString: "Novembre 2026",
-                    likesCount: 12
-                ),
-                FamilyQuote(
-                    quoteText: "Mémère, est-ce que le Père Noël il a des lunettes pour voir s'il y a du verglas sur le toit ?",
-                    authorName: "Lucas (5 ans)",
-                    context: "En regardant la météo devant la cheminée",
-                    dateString: "Noël 2021",
-                    likesCount: 9
-                ),
-                FamilyQuote(
-                    quoteText: "La bourse c'est comme le rôti : si tu sors trop tôt c'est pas cuit, si tu sors trop tard c'est cramé !",
-                    authorName: "Papa",
-                    context: "Au déjeuner du dimanche",
-                    dateString: "Octobre 2026",
-                    likesCount: 7
-                )
-            ]
-            saveQuotes()
+            self.quotes = []
         }
     }
 
@@ -291,6 +423,20 @@ class StorageManager: ObservableObject {
         let url = getDocumentsURL().appendingPathComponent(quotesFile)
         if let encoded = try? JSONEncoder().encode(quotes) {
             try? encoded.write(to: url)
+        }
+    }
+
+    func addQuote(_ quote: FamilyQuote) {
+        quotes.insert(quote, at: 0)
+        saveQuotes()
+        syncWithCloud()
+    }
+
+    func likeQuote(_ quote: FamilyQuote) {
+        if let idx = quotes.firstIndex(where: { $0.id == quote.id }) {
+            quotes[idx].likesCount += 1
+            saveQuotes()
+            syncWithCloud()
         }
     }
 
@@ -302,13 +448,9 @@ class StorageManager: ObservableObject {
             self.contacts = decoded
         } else {
             self.contacts = [
-                EmergencyContact(title: "Médecin traitant (Dr. Martin)", detail: "02 35 12 34 56", isPhone: true),
-                EmergencyContact(title: "Pédiatre de Lucas (Dr. Leroy)", detail: "02 35 78 90 12", isPhone: true),
-                EmergencyContact(title: "Code Wi-Fi Maison Mémère", detail: "FamilleMillet2026!", isPhone: false),
                 EmergencyContact(title: "SAMU / Urgence Médicale", detail: "15", isPhone: true),
                 EmergencyContact(title: "Pharmacie de garde", detail: "3237", isPhone: true)
             ]
-            saveContacts()
         }
     }
 
@@ -319,29 +461,9 @@ class StorageManager: ObservableObject {
         }
     }
 
-    // MARK: - Posts
-    private func loadPosts() {
-        let url = getDocumentsURL().appendingPathComponent(postsFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([PhotoPost].self, from: data) {
-            self.posts = decoded
-        } else {
-            self.posts = [
-                PhotoPost(
-                    authorName: "Marc-Alban",
-                    caption: "Magnifique dimanche en famille au jardin, Mémère était aux anges ❤️",
-                    dateString: "Il y a 2 jours",
-                    likesCount: 6
-                )
-            ]
-            savePosts()
-        }
-    }
-
-    func savePosts() {
-        let url = getDocumentsURL().appendingPathComponent(postsFile)
-        if let encoded = try? JSONEncoder().encode(posts) {
-            try? encoded.write(to: url)
-        }
+    func addContact(_ contact: EmergencyContact) {
+        contacts.append(contact)
+        saveContacts()
+        syncWithCloud()
     }
 }

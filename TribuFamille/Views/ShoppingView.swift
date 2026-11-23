@@ -132,109 +132,148 @@ struct ShoppingView: View {
                 }
                 .padding(.horizontal, 16)
 
-                // PAR RAYONS (Aisles)
-                VStack(spacing: 14) {
-                    ForEach(categories, id: \.self) { cat in
-                        let catItems = storage.shoppingItems.filter { item in
-                            if cat == "Bébé & Maison" {
-                                return item.category == "Bébé" || item.category == "Maison" || item.category == "Bébé & Maison"
+                // LISTE DE COURSES
+                if storage.shoppingItems.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "cart.badge.plus")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        Text("Votre liste de courses est vide")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Partagez vos besoins en direct avec toute la famille. Dès qu'un membre coche un article au magasin, la liste se met à jour pour tous !")
+                            .font(.system(size: 13))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+
+                        Button(action: { showAddModal = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                Text("Ajouter un premier article")
                             }
-                            return item.category == cat
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            .cornerRadius(12)
                         }
-
-                        if !catItems.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                // Header Rayon
-                                HStack {
-                                    HStack(spacing: 6) {
-                                        Circle()
-                                            .fill(categoryColor(cat))
-                                            .frame(width: 7, height: 7)
-                                        Text(cat.uppercased())
-                                            .font(.system(size: 11, weight: .heavy))
-                                            .foregroundColor(.gray)
-                                            .tracking(1)
-                                    }
-
-                                    Spacer()
-
-                                    Text(aisleLabel(cat))
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(Color(red: 0.40, green: 0.45, blue: 0.55))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color(red: 0.12, green: 0.16, blue: 0.23))
-                                        .cornerRadius(4)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 36)
+                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    .cornerRadius(18)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
+                } else {
+                    // PAR RAYONS (Aisles)
+                    VStack(spacing: 14) {
+                        ForEach(categories, id: \.self) { cat in
+                            let catItems = storage.shoppingItems.filter { item in
+                                if cat == "Bébé & Maison" {
+                                    return item.category == "Bébé" || item.category == "Maison" || item.category == "Bébé & Maison"
                                 }
-                                .padding(.horizontal, 4)
+                                return item.category == cat
+                            }
 
-                                // Rows
-                                VStack(spacing: 6) {
-                                    ForEach(catItems) { item in
-                                        Button(action: {
-                                            toggleShopping(item: item)
-                                        }) {
-                                            HStack(spacing: 12) {
-                                                // CHECKBOX
-                                                ZStack {
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .stroke(item.isBought ? Color(red: 0.06, green: 0.72, blue: 0.50) : Color.gray.opacity(0.5), lineWidth: 1.5)
-                                                        .frame(width: 22, height: 22)
+                            if !catItems.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    // Header Rayon
+                                    HStack {
+                                        HStack(spacing: 6) {
+                                            Circle()
+                                                .fill(categoryColor(cat))
+                                                .frame(width: 7, height: 7)
+                                            Text(cat.uppercased())
+                                                .font(.system(size: 11, weight: .heavy))
+                                                .foregroundColor(.gray)
+                                                .tracking(1)
+                                        }
 
-                                                    if item.isBought {
+                                        Spacer()
+
+                                        Text(aisleLabel(cat))
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(Color(red: 0.40, green: 0.45, blue: 0.55))
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color(red: 0.12, green: 0.16, blue: 0.23))
+                                            .cornerRadius(4)
+                                    }
+                                    .padding(.horizontal, 4)
+
+                                    // Rows
+                                    VStack(spacing: 6) {
+                                        ForEach(catItems) { item in
+                                            Button(action: {
+                                                toggleShopping(item: item)
+                                            }) {
+                                                HStack(spacing: 12) {
+                                                    // CHECKBOX
+                                                    ZStack {
                                                         RoundedRectangle(cornerRadius: 6)
-                                                            .fill(Color(red: 0.06, green: 0.72, blue: 0.50))
+                                                            .stroke(item.isBought ? Color(red: 0.06, green: 0.72, blue: 0.50) : Color.gray.opacity(0.5), lineWidth: 1.5)
                                                             .frame(width: 22, height: 22)
-                                                        Image(systemName: "checkmark")
-                                                            .font(.system(size: 12, weight: .bold))
-                                                            .foregroundColor(.black)
+
+                                                        if item.isBought {
+                                                            RoundedRectangle(cornerRadius: 6)
+                                                                .fill(Color(red: 0.06, green: 0.72, blue: 0.50))
+                                                                .frame(width: 22, height: 22)
+                                                            Image(systemName: "checkmark")
+                                                                .font(.system(size: 12, weight: .bold))
+                                                                .foregroundColor(.black)
+                                                        }
+                                                    }
+
+                                                    // INFOS
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text(item.name)
+                                                            .font(.system(size: 14, weight: .semibold))
+                                                            .foregroundColor(item.isBought ? .gray : .white)
+                                                            .strikethrough(item.isBought, color: .gray)
+
+                                                        if !item.addedByName.isEmpty {
+                                                            Text("Ajouté par \(item.addedByName)")
+                                                                .font(.system(size: 10))
+                                                                .foregroundColor(.gray.opacity(0.8))
+                                                        }
+                                                    }
+
+                                                    Spacer()
+
+                                                    // QUANTITÉ
+                                                    if let qty = item.quantity, !qty.isEmpty {
+                                                        Text(qty)
+                                                            .font(.system(size: 11, weight: .semibold))
+                                                            .foregroundColor(item.isBought ? .gray : Color(red: 0.96, green: 0.62, blue: 0.04))
+                                                            .padding(.horizontal, 7)
+                                                            .padding(.vertical, 3)
+                                                            .background(Color(red: 0.14, green: 0.18, blue: 0.26))
+                                                            .cornerRadius(6)
                                                     }
                                                 }
-
-                                                // INFOS
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text(item.name)
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(item.isBought ? .gray : .white)
-                                                        .strikethrough(item.isBought, color: .gray)
-
-                                                    if !item.addedByName.isEmpty {
-                                                        Text("Ajouté par \(item.addedByName)")
-                                                            .font(.system(size: 10))
-                                                            .foregroundColor(.gray.opacity(0.8))
-                                                    }
-                                                }
-
-                                                Spacer()
-
-                                                // QUANTITÉ
-                                                if let qty = item.quantity, !qty.isEmpty {
-                                                    Text(qty)
-                                                        .font(.system(size: 11, weight: .semibold))
-                                                        .foregroundColor(item.isBought ? .gray : Color(red: 0.96, green: 0.62, blue: 0.04))
-                                                        .padding(.horizontal, 7)
-                                                        .padding(.vertical, 3)
-                                                        .background(Color(red: 0.14, green: 0.18, blue: 0.26))
-                                                        .cornerRadius(6)
-                                                }
+                                                .padding(12)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(item.isBought ? Color(red: 0.06, green: 0.10, blue: 0.14) : Color(red: 0.09, green: 0.12, blue: 0.19))
+                                                )
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                                                )
                                             }
-                                            .padding(12)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .fill(item.isBought ? Color(red: 0.06, green: 0.10, blue: 0.14) : Color(red: 0.09, green: 0.12, blue: 0.19))
-                                            )
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
-                                            )
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal, 16)
 
                 // BOUTON AJOUTER UN ARTICLE EN GRAND (FIGMA STYLE)
                 Button(action: {

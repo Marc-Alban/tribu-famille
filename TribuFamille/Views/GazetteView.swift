@@ -22,7 +22,7 @@ struct GazetteView: View {
                             .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                             .tracking(1.5)
 
-                        Text("Gazette & Coin Mémère")
+                        Text("Gazette & Souvenirs")
                             .font(.system(size: isMemereMode ? 26 : 22, weight: .bold))
                             .foregroundColor(.white)
                     }
@@ -55,67 +55,110 @@ struct GazetteView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
 
-                // 1. CARTE LE MOT DE LÉO (FIGMA SCREEN #4)
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        HStack(spacing: 5) {
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            Text("LE MOT DE LÉO")
-                                .font(.system(size: 11, weight: .black))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .tracking(1)
+                // 1. CARTE PÉPITES & MOTS D'ENFANTS
+                if let topQuote = storage.quotes.first {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            HStack(spacing: 5) {
+                                Image(systemName: "quote.bubble.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                Text("LE MOT DE LA SEMAINE")
+                                    .font(.system(size: 11, weight: .black))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    .tracking(1)
+                            }
+
+                            Spacer()
+
+                            Button(action: {
+                                showAddQuoteModal = true
+                            }) {
+                                Text("+ Noter un mot")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            }
                         }
 
-                        Spacer()
+                        Text("« \(topQuote.quoteText) »")
+                            .font(.system(size: isMemereMode ? 22 : 17, weight: .bold, design: .serif))
+                            .italic()
+                            .foregroundColor(.white)
+                            .lineSpacing(4)
 
-                        Button(action: {
-                            showAddQuoteModal = true
-                        }) {
-                            Text("+ Noter un mot")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                        }
-                    }
-
-                    Text("« Mémère, elle fait les meilleurs câlins du monde entier. »")
-                        .font(.system(size: isMemereMode ? 22 : 17, weight: .bold, design: .serif))
-                        .italic()
-                        .foregroundColor(.white)
-                        .lineSpacing(4)
-
-                    HStack {
-                        Text("Léo, 6 ans • Dimanche dernier")
-                            .font(.system(size: isMemereMode ? 14 : 12))
-                            .foregroundColor(.gray)
-
-                        Spacer()
-
-                        HStack(spacing: 4) {
-                            Image(systemName: "heart.circle.fill")
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                            Text("12")
-                                .font(.system(size: 11, weight: .bold))
+                        HStack {
+                            Text("\(topQuote.authorName) • \(topQuote.context)")
+                                .font(.system(size: isMemereMode ? 14 : 12))
                                 .foregroundColor(.gray)
+
+                            Spacer()
+
+                            Button(action: {
+                                storage.likeQuote(topQuote)
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "heart.circle.fill")
+                                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                    Text("\(topQuote.likesCount)")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.gray)
+                                }
+                            }
                         }
                     }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
+                } else {
+                    // ÉTAT VIDE MOTS D'ENFANTS
+                    VStack(spacing: 14) {
+                        Image(systemName: "quote.bubble.fill")
+                            .font(.system(size: 34))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        Text("Aucun mot d'enfant enregistré")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Notez les phrases drôles, répliques cultes et perles des petits et grands pour ne jamais les oublier !")
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+
+                        Button(action: { showAddQuoteModal = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                Text("Noter un mot d'enfant")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            .cornerRadius(10)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+                    .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(red: 0.09, green: 0.12, blue: 0.19))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
-                )
-                .padding(.horizontal, 16)
 
                 // AUTRES MOTS D'ENFANTS SI DISPONIBLES
-                if storage.quotes.count > 0 {
+                if storage.quotes.count > 1 {
                     VStack(spacing: 8) {
-                        ForEach(storage.quotes.prefix(2)) { quote in
+                        ForEach(storage.quotes.dropFirst()) { quote in
                             HStack {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text("\"\(quote.quoteText)\"")
@@ -225,161 +268,64 @@ struct GazetteView: View {
                             .foregroundColor(.white)
                     }
 
-                    // LIGNE 1: URGENCES 15
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(red: 0.85, green: 0.18, blue: 0.18).opacity(0.2))
-                                .frame(width: 42, height: 42)
-                            Image(systemName: "cross.case.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(red: 0.95, green: 0.25, blue: 0.25))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Urgences médicales")
-                                .font(.system(size: isMemereMode ? 16 : 14, weight: .bold))
-                                .foregroundColor(.white)
-                            Text("Appeler immédiatement")
-                                .font(.system(size: isMemereMode ? 13 : 11))
-                                .foregroundColor(.gray)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            callNumber("15")
-                        }) {
-                            Text("15")
-                                .font(.system(size: isMemereMode ? 20 : 16, weight: .black))
-                                .foregroundColor(.white)
-                                .frame(width: 50, height: 36)
-                                .background(Color(red: 0.85, green: 0.18, blue: 0.18))
-                                .cornerRadius(8)
-                        }
-                    }
-                    .padding(10)
-                    .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-                    .cornerRadius(12)
-
-                    // LIGNE 2: DR MARTIN
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(red: 0.06, green: 0.72, blue: 0.50).opacity(0.18))
-                                .frame(width: 42, height: 42)
-                            Image(systemName: "phone.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(red: 0.06, green: 0.72, blue: 0.50))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Docteur Martin")
-                                .font(.system(size: isMemereMode ? 16 : 14, weight: .bold))
-                                .foregroundColor(.white)
-                            Text("Médecin de famille")
-                                .font(.system(size: isMemereMode ? 13 : 11))
-                                .foregroundColor(.gray)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            callNumber("02 35 12 34 56")
-                        }) {
-                            Text("Appeler")
-                                .font(.system(size: isMemereMode ? 14 : 12, weight: .bold))
-                                .foregroundColor(Color(red: 0.06, green: 0.72, blue: 0.50))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(Color(red: 0.06, green: 0.72, blue: 0.50).opacity(0.15))
-                                .cornerRadius(8)
-                        }
-                    }
-                    .padding(10)
-                    .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-                    .cornerRadius(12)
-
-                    // LIGNE 3: CLAIRE / MARC-ALBAN (CONTACT PRIORITAIRE)
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.18))
-                                .frame(width: 42, height: 42)
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Claire & Marc-Alban")
-                                .font(.system(size: isMemereMode ? 16 : 14, weight: .bold))
-                                .foregroundColor(.white)
-                            Text("Contact prioritaire")
-                                .font(.system(size: isMemereMode ? 13 : 11))
-                                .foregroundColor(.gray)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            callNumber("06 12 34 56 78")
-                        }) {
-                            Text("Appeler")
-                                .font(.system(size: isMemereMode ? 14 : 12, weight: .bold))
-                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.15))
-                                .cornerRadius(8)
-                        }
-                    }
-                    .padding(10)
-                    .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-                    .cornerRadius(12)
-
-                    // LIGNE 4: CODE WI-FI MAISON
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(red: 0.40, green: 0.45, blue: 0.95).opacity(0.18))
-                                .frame(width: 42, height: 42)
-                            Image(systemName: "wifi")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(red: 0.60, green: 0.65, blue: 1.0))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Wi-Fi de la maison")
-                                .font(.system(size: isMemereMode ? 16 : 14, weight: .bold))
-                                .foregroundColor(.white)
-                            Text("Livebox-Willet (WPA3)")
-                                .font(.system(size: isMemereMode ? 13 : 11))
-                                .foregroundColor(.gray)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            UIPasteboard.general.string = wifiPassword
-                            showWifiCopiedAlert = true
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "doc.on.doc.fill")
-                                    .font(.system(size: 10))
-                                Text("Copier")
-                                    .font(.system(size: isMemereMode ? 14 : 12, weight: .bold))
+                    // CONTACTS & NUMÉROS UTILES DE LA FAMILLE
+                    ForEach(storage.contacts) { contact in
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(contact.isPhone ? (contact.detail == "15" ? Color.red.opacity(0.2) : Color.green.opacity(0.18)) : Color.blue.opacity(0.18))
+                                    .frame(width: 42, height: 42)
+                                Image(systemName: contact.isPhone ? (contact.detail == "15" ? "cross.case.fill" : "phone.fill") : "wifi")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(contact.isPhone ? (contact.detail == "15" ? Color.red : Color.green) : Color.blue)
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(Color(red: 0.18, green: 0.24, blue: 0.35))
-                            .cornerRadius(8)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(contact.title)
+                                    .font(.system(size: isMemereMode ? 16 : 14, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text(contact.detail)
+                                    .font(.system(size: isMemereMode ? 13 : 11))
+                                    .foregroundColor(.gray)
+                            }
+
+                            Spacer()
+
+                            if contact.isPhone {
+                                Button(action: {
+                                    callNumber(contact.detail)
+                                }) {
+                                    Text(contact.detail.count <= 4 ? contact.detail : "Appeler")
+                                        .font(.system(size: isMemereMode ? 15 : 12, weight: .bold))
+                                        .foregroundColor(contact.detail == "15" ? .white : Color.green)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 7)
+                                        .background(contact.detail == "15" ? Color.red : Color.green.opacity(0.15))
+                                        .cornerRadius(8)
+                                }
+                            } else {
+                                Button(action: {
+                                    UIPasteboard.general.string = contact.detail
+                                    showWifiCopiedAlert = true
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.doc.fill")
+                                            .font(.system(size: 10))
+                                        Text("Copier")
+                                    }
+                                    .font(.system(size: isMemereMode ? 14 : 12, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(Color(red: 0.18, green: 0.24, blue: 0.35))
+                                    .cornerRadius(8)
+                                }
+                            }
                         }
+                        .padding(10)
+                        .background(Color(red: 0.07, green: 0.09, blue: 0.15))
+                        .cornerRadius(12)
                     }
-                    .padding(10)
-                    .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-                    .cornerRadius(12)
                 }
                 .padding(14)
                 .background(
