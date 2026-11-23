@@ -196,6 +196,14 @@
             display: none;
         }
 
+        /* TAB PANE CONTAINER */
+        .tab-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
+
         /* CARDS & SURFACES */
         .card {
             background: #0f1524;
@@ -442,6 +450,8 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            min-width: 0;
+            width: 100%;
         }
         .input-label {
             font-size: 11px;
@@ -459,6 +469,9 @@
             font-size: 14px;
             font-family: inherit;
             outline: none;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
         .input-field:focus {
             border-color: #f59e0b;
@@ -577,29 +590,29 @@
                 <span class="input-label" style="color: #f59e0b;">1. Mon Identité Personnelle</span>
                 <div class="input-group">
                     <label class="input-label">Prénom & Nom</label>
-                    <input class="input-field" type="text" id="authUserName" placeholder="Ex: Marc-Alban" value="Marc-Alban">
+                    <input class="input-field" type="text" id="authUserName" placeholder="Ex: Marc-Alban" value="">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Mon Rôle dans la tribu</label>
-                    <input class="input-field" type="text" id="authUserRole" placeholder="Ex: Père, Mère, Aîné, Papi..." value="Père">
+                    <input class="input-field" type="text" id="authUserRole" placeholder="Ex: Père, Mère, Aîné, Papi..." value="">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Date de naissance</label>
-                    <input class="input-field" type="date" id="authUserBirthDate" value="1998-04-15">
+                    <input class="input-field" type="date" id="authUserBirthDate" value="">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="input-group">
                         <label class="input-label">Pointure</label>
-                        <input class="input-field" type="text" id="authUserShoe" placeholder="Ex: 43" value="43">
+                        <input class="input-field" type="text" id="authUserShoe" placeholder="Ex: 43" value="">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Vêtements</label>
-                        <input class="input-field" type="text" id="authUserClothing" placeholder="Ex: L / 40" value="L">
+                        <input class="input-field" type="text" id="authUserClothing" placeholder="Ex: L / 40" value="">
                     </div>
                 </div>
                 <div class="input-group">
                     <label class="input-label">Friandise / Péché mignon</label>
-                    <input class="input-field" type="text" id="authUserTreat" placeholder="Ex: Chocolat noir 70%, Macarons" value="Tarte Tatin">
+                    <input class="input-field" type="text" id="authUserTreat" placeholder="Ex: Chocolat noir, Macarons..." value="">
                 </div>
             </div>
 
@@ -608,11 +621,11 @@
                 <span class="input-label" style="color: #f59e0b;">2. Fonder ma Famille</span>
                 <div class="input-group">
                     <label class="input-label">Nom de Famille / Tribu</label>
-                    <input class="input-field" type="text" id="createTribeName" placeholder="Ex: Famille Millet" value="Famille Millet">
+                    <input class="input-field" type="text" id="createTribeName" placeholder="Ex: Famille Durand" value="">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Mot de passe secret de la tribu</label>
-                    <input class="input-field" type="password" id="createTribePassword" placeholder="Pour protéger vos données" value="Secret2026">
+                    <input class="input-field" type="password" id="createTribePassword" placeholder="Pour protéger vos données" value="">
                 </div>
                 <button class="btn-gold" style="margin-top: 6px;" onclick="handleCreateTribe()">
                     Créer ma Tribu & Commencer
