@@ -414,8 +414,14 @@ struct BirthdaysView: View {
 
     private func sendWishMessage(for member: Member) {
         let text = "Joyeux anniversaire \(member.name) ! 🎉 Plein de bonheur pour tes \(member.nextAge) ans ! Bisous de toute la tribu ❤️"
-        if let phone = member.phone, let url = URL(string: "sms:\(phone)&body=\(text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+        if let phone = member.phone, !phone.trimmingCharacters(in: .whitespaces).isEmpty, let url = URL(string: "sms:\(phone)&body=\(text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
             UIApplication.shared.open(url)
+        } else {
+            let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootVC = windowScene.windows.first?.rootViewController {
+                rootVC.present(av, animated: true, completion: nil)
+            }
         }
     }
 }

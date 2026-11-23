@@ -9,7 +9,9 @@ struct GazetteView: View {
     @State private var newQuoteAuthor = ""
     @State private var newQuoteContext = ""
 
-    private let wifiPassword = "FamilleWillet2026!"
+    private var wifiPassword: String {
+        storage.tribePassword.isEmpty ? "Tribu2026!" : storage.tribePassword
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -367,7 +369,7 @@ struct GazetteView: View {
                     Section(header: Text("La pépite ou réplique").foregroundColor(.gray)) {
                         TextField("Ce qui a été dit...", text: $newQuoteText)
                             .foregroundColor(.white)
-                        TextField("Qui a dit ça ? (ex: Lucas (6 ans), Mémère)", text: $newQuoteAuthor)
+                        TextField("Qui a dit ça ? (ex: Lucas, Maman, Papi...)", text: $newQuoteAuthor)
                             .foregroundColor(.white)
                         TextField("Contexte (ex: À table devant le rôti)", text: $newQuoteContext)
                             .foregroundColor(.white)

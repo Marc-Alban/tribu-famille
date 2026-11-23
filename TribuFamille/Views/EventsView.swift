@@ -301,49 +301,115 @@ struct EventsView: View {
     // MARK: - Vue Dépenses & Pot Commun
     private var expensesView: some View {
         VStack(spacing: 16) {
-            // HERO RECAP
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("CAGNOTTE & ÉQUILIBRAGE")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
-                    Spacer()
-                    Text("Noël 2026")
-                        .font(.system(size: 11, weight: .bold))
+            if let event = currentEvent {
+                // HERO RECAP
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("ORGANISATION & REPAS")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        Spacer()
+                        Text(event.title)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.gray)
+                    }
+
+                    Text("\(completedCount) sur \(max(totalCount, 1)) préparatifs prêts")
+                        .font(.system(size: 18, weight: .heavy))
+                        .foregroundColor(.white)
+
+                    Text("📍 \(event.location) • \(event.attendeesCount) participants")
+                        .font(.system(size: 12))
                         .foregroundColor(.gray)
                 }
+                .padding(16)
+                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
+                )
+                .padding(.horizontal, 16)
 
-                Text("Total engagé : 240 €")
-                    .font(.system(size: 20, weight: .heavy))
-                    .foregroundColor(.white)
+                // LISTE DES PLATS & PARTICIPATIONS
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("DÉTAIL DES PARTICIPATIONS")
+                        .font(.system(size: 11, weight: .black))
+                        .foregroundColor(.gray)
 
-                Text("Équilibrage automatique : ~30 € par adulte")
-                    .font(.system(size: 12))
-                    .foregroundColor(.gray)
-            }
-            .padding(16)
-            .background(Color(red: 0.08, green: 0.10, blue: 0.16))
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(red: 0.96, green: 0.62, blue: 0.04).opacity(0.35), lineWidth: 1)
-            )
-            .padding(.horizontal, 16)
-
-            // LISTE DES DÉPENSES EFFECTUÉES
-            VStack(alignment: .leading, spacing: 10) {
-                Text("DÉTAIL DES ACHATS RÉALISÉS")
-                    .font(.system(size: 11, weight: .black))
-                    .foregroundColor(.gray)
-
-                VStack(spacing: 8) {
-                    expenseRow(title: "Dinde fermière & Champagne", buyer: "Marc-Alban (Papa)", amount: "140 €", balance: "+50 €", isPositive: true)
-                    expenseRow(title: "Fromages AOP & Pains spéciaux", buyer: "Camille (Maman)", amount: "40 €", balance: "Doit 10 €", isPositive: false)
-                    expenseRow(title: "Bûche pâtissière & Chocolats", buyer: "Mémère Denise", amount: "60 €", balance: "Équilibré", isPositive: true)
+                    if event.items.isEmpty {
+                        VStack(spacing: 8) {
+                            Text("Aucun plat ou participation noté pour le moment.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                                .italic()
+                            Button(action: { showAddItemModal = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "plus")
+                                    Text("Proposer le premier plat")
+                                }
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                        .cornerRadius(12)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(event.items) { item in
+                                expenseRow(
+                                    title: item.title,
+                                    buyer: item.assignedToName ?? "Membre",
+                                    amount: item.category,
+                                    balance: item.isCompleted ? "Prêt ✓" : "À préparer",
+                                    isPositive: item.isCompleted
+                                )
+                            }
+                        }
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "banknote")
+                        .font(.system(size: 40))
+                        .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                    Text("Aucun événement actif")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                    Text("Créez votre événement familial pour organiser les plats et les dépenses de toute la tribu.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+
+                    Button(action: { showAddEventModal = true }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus")
+                            Text("Créer un événement")
+                        }
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color(red: 0.96, green: 0.62, blue: 0.04))
+                        .cornerRadius(12)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 36)
+                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .cornerRadius(18)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
         }
     }
 
@@ -380,7 +446,7 @@ struct EventsView: View {
         VStack(spacing: 16) {
             // MOIS & FLÈCHES
             HStack {
-                Text("Décembre 2026")
+                Text(currentMonthHeader)
                     .font(.system(size: 18, weight: .black))
                     .foregroundColor(.white)
                 Spacer()
@@ -412,38 +478,32 @@ struct EventsView: View {
             }
             .padding(.horizontal, 16)
 
-            // GRILLE DES JOURS (DÉCEMBRE 2026 : Débute un mardi)
+            // GRILLE DES JOURS
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                // Offset lundi
-                Text("").frame(height: 38)
-
                 ForEach(1...31, id: \.self) { day in
+                    let hasEv = storage.events.contains(where: { Calendar.current.component(.day, from: $0.date) == day })
+                    let hasBday = storage.members.contains(where: { Calendar.current.component(.day, from: $0.birthDate) == day })
+
                     ZStack {
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(day == 24 ? Color(red: 0.96, green: 0.62, blue: 0.04) : (day == 5 ? Color.orange.opacity(0.3) : Color(red: 0.08, green: 0.10, blue: 0.16)))
+                            .fill(hasEv ? Color(red: 0.96, green: 0.62, blue: 0.04) : (hasBday ? Color.orange.opacity(0.3) : Color(red: 0.08, green: 0.10, blue: 0.16)))
                             .frame(height: 38)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(day == 24 ? Color(red: 0.96, green: 0.62, blue: 0.04) : Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
+                                    .stroke(hasEv ? Color(red: 0.96, green: 0.62, blue: 0.04) : Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1)
                             )
 
                         VStack(spacing: 2) {
                             Text("\(day)")
                                 .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(day == 24 ? .black : .white)
+                                .foregroundColor(hasEv ? .black : .white)
 
                             HStack(spacing: 2) {
-                                if day == 5 {
-                                    Circle().fill(Color.orange).frame(width: 4, height: 4) // Anniv Mémère
+                                if hasBday {
+                                    Circle().fill(hasEv ? Color.black : Color.orange).frame(width: 4, height: 4)
                                 }
-                                if day == 10 {
-                                    Circle().fill(Color.orange).frame(width: 4, height: 4) // Anniv Léa
-                                }
-                                if day == 14 {
-                                    Circle().fill(Color.orange).frame(width: 4, height: 4) // Anniv Lucas
-                                }
-                                if day == 24 {
-                                    Circle().fill(Color.black).frame(width: 4, height: 4) // Noël
+                                if hasEv {
+                                    Circle().fill(Color.black).frame(width: 4, height: 4)
                                 }
                             }
                         }
@@ -452,23 +512,55 @@ struct EventsView: View {
             }
             .padding(.horizontal, 16)
 
-            // LISTE DES ÉVÉNEMENTS DU MOIS
+            // LISTE DES ÉVÉNEMENTS RÉELS ET ANNIVERSAIRES
             VStack(alignment: .leading, spacing: 10) {
-                Text("ÉVÉNEMENTS EN DÉCEMBRE")
+                Text("ÉVÉNEMENTS & FÊTES DE LA FAMILLE")
                     .font(.system(size: 11, weight: .black))
                     .foregroundColor(Color(red: 0.96, green: 0.62, blue: 0.04))
 
-                VStack(spacing: 8) {
-                    calendarEventRow(dateText: "5 Déc.", title: "🎂 Anniversaire Mémère Denise (84 ans)", color: .orange)
-                    calendarEventRow(dateText: "10 Déc.", title: "🎂 Anniversaire Léa (9 ans)", color: .orange)
-                    calendarEventRow(dateText: "14 Déc.", title: "🎂 Anniversaire Lucas (8 ans)", color: .orange)
-                    calendarEventRow(dateText: "24 Déc.", title: "🎄 Grand Réveillon de Noël chez Mamie", color: Color(red: 0.96, green: 0.62, blue: 0.04))
-                    calendarEventRow(dateText: "31 Déc.", title: "🎉 Saint-Sylvestre en famille", color: .green)
+                if storage.events.isEmpty && storage.members.isEmpty {
+                    Text("Aucun événement ou anniversaire renseigné pour le moment.")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                        .italic()
+                        .padding(.vertical, 8)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(storage.events) { event in
+                            calendarEventRow(
+                                dateText: eventDayAndMonth(event.date),
+                                title: "📅 \(event.title) (\(event.location))",
+                                color: Color(red: 0.96, green: 0.62, blue: 0.04)
+                            )
+                        }
+
+                        ForEach(storage.members) { member in
+                            calendarEventRow(
+                                dateText: eventDayAndMonth(member.birthDate),
+                                title: "🎂 Anniversaire \(member.name) (\(member.nextAge) ans)",
+                                color: .orange
+                            )
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 30)
         }
+    }
+
+    private var currentMonthHeader: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "LLLL yyyy"
+        return f.string(from: Date()).capitalized
+    }
+
+    private func eventDayAndMonth(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "d MMM"
+        return f.string(from: date)
     }
 
     private func calendarEventRow(dateText: String, title: String, color: Color) -> some View {
@@ -545,7 +637,7 @@ struct EventsView: View {
                 Form {
                     Section(header: Text("Détails de l'événement").foregroundColor(.gray)) {
                         TextField("Titre (ex: Déjeuner dimanche, Vacances)", text: $newEventTitle)
-                        TextField("Lieu (ex: Chez Mémère, Restaurant)", text: $newEventLocation)
+                        TextField("Lieu (ex: Maison familiale, Restaurant...)", text: $newEventLocation)
                         DatePicker("Date & Heure", selection: $newEventDate)
                         Picker("Type", selection: $newEventCategory) {
                             Text("Repas").tag("Repas")
@@ -577,8 +669,7 @@ struct EventsView: View {
             description: "Événement partagé avec toute la tribu.",
             category: newEventCategory
         )
-        storage.events.append(event)
-        storage.saveEvents()
+        storage.addEvent(event)
         newEventTitle = ""
         showAddEventModal = false
     }

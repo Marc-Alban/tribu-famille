@@ -388,18 +388,15 @@ struct ShoppingView: View {
             quantity: newQty.isEmpty ? nil : newQty,
             addedByName: author
         )
-        storage.shoppingItems.append(item)
-        storage.saveShopping()
+        storage.addShoppingItem(item)
         newName = ""
         newQty = ""
         showAddModal = false
     }
 
     private func toggleShopping(item: ShoppingItem) {
-        guard let idx = storage.shoppingItems.firstIndex(where: { $0.id == item.id }) else { return }
         withAnimation(.easeInOut(duration: 0.2)) {
-            storage.shoppingItems[idx].isBought.toggle()
+            storage.toggleShoppingItem(item)
         }
-        storage.saveShopping()
     }
 }

@@ -36,6 +36,18 @@ class StorageManager: ObservableObject {
     private let tribeNameKey = "tribu_family_name"
     private let tribePasswordKey = "tribu_family_password"
 
+    static var jsonEncoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+
+    static var jsonDecoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
+
     init() {
         restoreSession()
         loadAllLocalData()
@@ -54,9 +66,21 @@ class StorageManager: ObservableObject {
         self.tribeName = UserDefaults.standard.string(forKey: tribeNameKey) ?? ""
         self.tribePassword = UserDefaults.standard.string(forKey: tribePasswordKey) ?? ""
 
-        if let data = UserDefaults.standard.data(forKey: currentMemberKey),
-           let decoded = try? JSONDecoder().decode(Member.self, from: data) {
-            self.currentMember = decoded
+        if let data = UserDefaults.standard.data(forKey: currentMemberKey) {
+            if let decoded = try? Self.jsonDecoder.decode(Member.self, from: data) {
+                self.currentMember = decoded
+            } else if let fallback = try? JSONDecoder().decode(Member.self, from: data) {
+                self.currentMember = fallback
+            }
+        }
+
+        // Si le décodage a échoué mais qu'on a le prénom sauvegardé
+        if self.currentMember == nil && self.isLoggedIn {
+            if let savedName = UserDefaults.standard.string(forKey: "tribu_current_member_name"), !savedName.isEmpty {
+                let savedId = UserDefaults.standard.string(forKey: "tribu_current_member_id") ?? UUID().uuidString
+                let savedRole = UserDefaults.standard.string(forKey: "tribu_current_member_role") ?? "Membre"
+                self.currentMember = Member(id: savedId, name: savedName, role: savedRole, birthDate: Date())
+            }
         }
     }
 
@@ -66,10 +90,18 @@ class StorageManager: ObservableObject {
         UserDefaults.standard.set(tribeName, forKey: tribeNameKey)
         UserDefaults.standard.set(tribePassword, forKey: tribePasswordKey)
 
-        if let member = currentMember, let encoded = try? JSONEncoder().encode(member) {
-            UserDefaults.standard.set(encoded, forKey: currentMemberKey)
+        if let member = currentMember {
+            UserDefaults.standard.set(member.id, forKey: "tribu_current_member_id")
+            UserDefaults.standard.set(member.name, forKey: "tribu_current_member_name")
+            UserDefaults.standard.set(member.role, forKey: "tribu_current_member_role")
+            if let encoded = try? Self.jsonEncoder.encode(member) {
+                UserDefaults.standard.set(encoded, forKey: currentMemberKey)
+            }
         } else {
             UserDefaults.standard.removeObject(forKey: currentMemberKey)
+            UserDefaults.standard.removeObject(forKey: "tribu_current_member_id")
+            UserDefaults.standard.removeObject(forKey: "tribu_current_member_name")
+            UserDefaults.standard.removeObject(forKey: "tribu_current_member_role")
         }
     }
 
@@ -190,14 +222,18 @@ class StorageManager: ObservableObject {
     func updateCurrentMember(
         name: String,
         role: String,
-        phone: String?,
-        shoeSize: String?,
-        clothingSize: String?,
-        favouriteTreat: String?
+        birthDate: Date? = nil,
+        phone: String? = nil,
+        shoeSize: String? = nil,
+        clothingSize: String? = nil,
+        favouriteTreat: String? = nil
     ) {
         guard var current = currentMember else { return }
         current.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         current.role = role
+        if let birthDate = birthDate {
+            current.birthDate = birthDate
+        }
         current.phone = phone
         current.shoeSize = shoeSize
         current.clothingSize = clothingSize
@@ -212,7 +248,6 @@ class StorageManager: ObservableObject {
 
         saveSession()
         saveMembers()
-        syncWithCloud()
     }
 
     // MARK: - Synchronisation Cloud Bidirectionnelle
@@ -227,7 +262,18 @@ class StorageManager: ObservableObject {
                 self.shoppingItems = payload.shoppingItems
                 self.quotes = payload.quotes
                 self.contacts = payload.contacts
-                saveAllLocalData()
+
+                // Mettre à jour l'identité du membre courant depuis le cloud
+                if let myId = currentMember?.id, let cloudMember = payload.members.first(where: { $0.id == myId }) {
+                    self.currentMember = cloudMember
+                } else if let myName = currentMember?.name, let cloudMember = payload.members.first(where: { $0.name.lowercased() == myName.lowercased() }) {
+                    self.currentMember = cloudMember
+                } else if currentMember == nil, let first = payload.members.first {
+                    self.currentMember = first
+                }
+
+                saveSession()
+                saveAllLocalDataInternal()
             }
             self.isSyncing = false
             self.syncError = nil
@@ -274,12 +320,29 @@ class StorageManager: ObservableObject {
         loadContacts()
     }
 
+    private func saveAllLocalDataInternal() {
+        let dir = getDocumentsURL()
+        if let encoded = try? Self.jsonEncoder.encode(members) {
+            try? encoded.write(to: dir.appendingPathComponent(membersFile))
+        }
+        if let encoded = try? Self.jsonEncoder.encode(events) {
+            try? encoded.write(to: dir.appendingPathComponent(eventsFile))
+        }
+        if let encoded = try? Self.jsonEncoder.encode(shoppingItems) {
+            try? encoded.write(to: dir.appendingPathComponent(shoppingFile))
+        }
+        if let encoded = try? Self.jsonEncoder.encode(quotes) {
+            try? encoded.write(to: dir.appendingPathComponent(quotesFile))
+        }
+        if let encoded = try? Self.jsonEncoder.encode(contacts) {
+            try? encoded.write(to: dir.appendingPathComponent(contactsFile))
+        }
+        NotificationManager.shared.scheduleBirthdayNotifications(for: members)
+    }
+
     func saveAllLocalData() {
-        saveMembers()
-        saveEvents()
-        saveShopping()
-        saveQuotes()
-        saveContacts()
+        saveAllLocalDataInternal()
+        syncWithCloud()
     }
 
     private func deleteLocalData() {
@@ -294,96 +357,96 @@ class StorageManager: ObservableObject {
     // MARK: - Members
     private func loadMembers() {
         let url = getDocumentsURL().appendingPathComponent(membersFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([Member].self, from: data) {
-            self.members = decoded
-        } else {
-            self.members = []
+        if let data = try? Data(contentsOf: url) {
+            if let decoded = try? Self.jsonDecoder.decode([Member].self, from: data) {
+                self.members = decoded
+            } else if let fallback = try? JSONDecoder().decode([Member].self, from: data) {
+                self.members = fallback
+            }
         }
     }
 
     func saveMembers() {
         let url = getDocumentsURL().appendingPathComponent(membersFile)
-        if let encoded = try? JSONEncoder().encode(members) {
+        if let encoded = try? Self.jsonEncoder.encode(members) {
             try? encoded.write(to: url)
         }
         NotificationManager.shared.scheduleBirthdayNotifications(for: members)
+        syncWithCloud()
     }
 
     func addMember(_ member: Member) {
         members.append(member)
         saveMembers()
-        syncWithCloud()
     }
 
     // MARK: - Events
     private func loadEvents() {
         let url = getDocumentsURL().appendingPathComponent(eventsFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([FamilyEvent].self, from: data) {
-            self.events = decoded
-        } else {
-            self.events = []
+        if let data = try? Data(contentsOf: url) {
+            if let decoded = try? Self.jsonDecoder.decode([FamilyEvent].self, from: data) {
+                self.events = decoded
+            } else if let fallback = try? JSONDecoder().decode([FamilyEvent].self, from: data) {
+                self.events = fallback
+            }
         }
     }
 
     func saveEvents() {
         let url = getDocumentsURL().appendingPathComponent(eventsFile)
-        if let encoded = try? JSONEncoder().encode(events) {
+        if let encoded = try? Self.jsonEncoder.encode(events) {
             try? encoded.write(to: url)
         }
+        syncWithCloud()
     }
 
     func addEvent(_ event: FamilyEvent) {
         events.append(event)
         saveEvents()
-        syncWithCloud()
     }
 
     func updateEvent(_ event: FamilyEvent) {
         if let idx = events.firstIndex(where: { $0.id == event.id }) {
             events[idx] = event
             saveEvents()
-            syncWithCloud()
         }
     }
 
     // MARK: - Shopping
     private func loadShopping() {
         let url = getDocumentsURL().appendingPathComponent(shoppingFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([ShoppingItem].self, from: data) {
-            self.shoppingItems = decoded
-        } else {
-            self.shoppingItems = []
+        if let data = try? Data(contentsOf: url) {
+            if let decoded = try? Self.jsonDecoder.decode([ShoppingItem].self, from: data) {
+                self.shoppingItems = decoded
+            } else if let fallback = try? JSONDecoder().decode([ShoppingItem].self, from: data) {
+                self.shoppingItems = fallback
+            }
         }
     }
 
     func saveShopping() {
         let url = getDocumentsURL().appendingPathComponent(shoppingFile)
-        if let encoded = try? JSONEncoder().encode(shoppingItems) {
+        if let encoded = try? Self.jsonEncoder.encode(shoppingItems) {
             try? encoded.write(to: url)
         }
+        syncWithCloud()
     }
 
     func addShoppingItem(_ item: ShoppingItem) {
         shoppingItems.append(item)
         saveShopping()
-        syncWithCloud()
     }
 
     func toggleShoppingItem(_ item: ShoppingItem) {
         if let idx = shoppingItems.firstIndex(where: { $0.id == item.id }) {
             shoppingItems[idx].isBought.toggle()
             saveShopping()
-            syncWithCloud()
         }
     }
 
     func deleteShoppingItem(_ item: ShoppingItem) {
         shoppingItems.removeAll(where: { $0.id == item.id })
         saveShopping()
-        syncWithCloud()
     }
 
     // MARK: - Wishlist
@@ -391,7 +454,6 @@ class StorageManager: ObservableObject {
         if let idx = members.firstIndex(where: { $0.id == memberId }) {
             members[idx].wishlist.append(wish)
             saveMembers()
-            syncWithCloud()
         }
     }
 
@@ -404,48 +466,50 @@ class StorageManager: ObservableObject {
                 members[mIdx].wishlist[wIdx].isReservedBy = nil
             }
             saveMembers()
-            syncWithCloud()
         }
     }
 
     // MARK: - Quotes
     private func loadQuotes() {
         let url = getDocumentsURL().appendingPathComponent(quotesFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([FamilyQuote].self, from: data) {
-            self.quotes = decoded
-        } else {
-            self.quotes = []
+        if let data = try? Data(contentsOf: url) {
+            if let decoded = try? Self.jsonDecoder.decode([FamilyQuote].self, from: data) {
+                self.quotes = decoded
+            } else if let fallback = try? JSONDecoder().decode([FamilyQuote].self, from: data) {
+                self.quotes = fallback
+            }
         }
     }
 
     func saveQuotes() {
         let url = getDocumentsURL().appendingPathComponent(quotesFile)
-        if let encoded = try? JSONEncoder().encode(quotes) {
+        if let encoded = try? Self.jsonEncoder.encode(quotes) {
             try? encoded.write(to: url)
         }
+        syncWithCloud()
     }
 
     func addQuote(_ quote: FamilyQuote) {
         quotes.insert(quote, at: 0)
         saveQuotes()
-        syncWithCloud()
     }
 
     func likeQuote(_ quote: FamilyQuote) {
         if let idx = quotes.firstIndex(where: { $0.id == quote.id }) {
             quotes[idx].likesCount += 1
             saveQuotes()
-            syncWithCloud()
         }
     }
 
     // MARK: - Contacts
     private func loadContacts() {
         let url = getDocumentsURL().appendingPathComponent(contactsFile)
-        if let data = try? Data(contentsOf: url),
-           let decoded = try? JSONDecoder().decode([EmergencyContact].self, from: data) {
-            self.contacts = decoded
+        if let data = try? Data(contentsOf: url) {
+            if let decoded = try? Self.jsonDecoder.decode([EmergencyContact].self, from: data) {
+                self.contacts = decoded
+            } else if let fallback = try? JSONDecoder().decode([EmergencyContact].self, from: data) {
+                self.contacts = fallback
+            }
         } else {
             self.contacts = [
                 EmergencyContact(title: "SAMU / Urgence Médicale", detail: "15", isPhone: true),
@@ -456,14 +520,14 @@ class StorageManager: ObservableObject {
 
     func saveContacts() {
         let url = getDocumentsURL().appendingPathComponent(contactsFile)
-        if let encoded = try? JSONEncoder().encode(contacts) {
+        if let encoded = try? Self.jsonEncoder.encode(contacts) {
             try? encoded.write(to: url)
         }
+        syncWithCloud()
     }
 
     func addContact(_ contact: EmergencyContact) {
         contacts.append(contact)
         saveContacts()
-        syncWithCloud()
     }
 }

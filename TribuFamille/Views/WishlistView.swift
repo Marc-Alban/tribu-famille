@@ -263,29 +263,21 @@ struct WishlistView: View {
 
     private func addWish() {
         guard let member = targetMember, !newWishTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        if let idx = storage.members.firstIndex(where: { $0.id == member.id }) {
-            let item = WishlistItem(
-                title: newWishTitle.trimmingCharacters(in: .whitespaces),
-                priceEstimate: newWishPrice.isEmpty ? nil : newWishPrice,
-                isReservedBy: nil
-            )
-            storage.members[idx].wishlist.append(item)
-            storage.saveMembers()
-        }
+        let item = WishlistItem(
+            title: newWishTitle.trimmingCharacters(in: .whitespaces),
+            priceEstimate: newWishPrice.isEmpty ? nil : newWishPrice,
+            isReservedBy: nil
+        )
+        storage.addWish(to: member.id, wish: item)
         newWishTitle = ""
         newWishPrice = ""
         showAddWishModal = false
     }
 
     private func toggleReservation(member: Member, wish: WishlistItem) {
-        guard let mIdx = storage.members.firstIndex(where: { $0.id == member.id }),
-              let wIdx = storage.members[mIdx].wishlist.firstIndex(where: { $0.id == wish.id }) else { return }
-
         let myName = storage.currentMember?.name ?? "Moi"
-        let current = storage.members[mIdx].wishlist[wIdx].isReservedBy
         withAnimation {
-            storage.members[mIdx].wishlist[wIdx].isReservedBy = (current == nil) ? myName : nil
+            storage.toggleReserveWish(for: member.id, wishId: wish.id, by: myName)
         }
-        storage.saveMembers()
     }
 }

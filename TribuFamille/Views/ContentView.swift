@@ -113,24 +113,27 @@ struct ContentView: View {
                         )
                     }
 
-                    // MON COMPTE (AVATAR PERSONNEL - PAS D'USURPATION)
+                    // MON COMPTE (AVATAR PERSONNEL - CENTRÉ ET ALIGNÉ)
                     Button(action: {
                         showProfileSheet = true
                     }) {
-                        ZStack(alignment: .bottomTrailing) {
+                        ZStack {
                             Circle()
                                 .fill(Color(red: 0.96, green: 0.62, blue: 0.04))
-                                .frame(width: 36, height: 36)
-                            Text(String((storage.currentMember?.name ?? "M").prefix(1)))
-                                .font(.system(size: 15, weight: .bold))
+                                .frame(width: 38, height: 38)
+                            Text(String((storage.currentMember?.name ?? "M").prefix(1)).uppercased())
+                                .font(.system(size: 16, weight: .black))
                                 .foregroundColor(.black)
-
-                            // Point de présence vert émeraude
+                                .multilineTextAlignment(.center)
+                        }
+                        .overlay(
                             Circle()
                                 .fill(Color(red: 0.06, green: 0.72, blue: 0.50))
-                                .frame(width: 10, height: 10)
-                                .overlay(Circle().stroke(Color(red: 0.04, green: 0.06, blue: 0.10), lineWidth: 1.5))
-                        }
+                                .frame(width: 11, height: 11)
+                                .overlay(Circle().stroke(Color(red: 0.04, green: 0.06, blue: 0.10), lineWidth: 2))
+                                .offset(x: 1, y: 1),
+                            alignment: .bottomTrailing
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
@@ -196,6 +199,7 @@ struct UserProfileSheet: View {
     
     @State private var editName = ""
     @State private var editRole = "Parent"
+    @State private var editBirthDate = Date()
     @State private var editPhone = ""
     @State private var editShoeSize = ""
     @State private var editClothingSize = ""
@@ -218,9 +222,10 @@ struct UserProfileSheet: View {
                                 Circle()
                                     .fill(Color(red: 0.96, green: 0.62, blue: 0.04))
                                     .frame(width: 64, height: 64)
-                                Text(String((storage.currentMember?.name ?? "M").prefix(1)))
-                                    .font(.system(size: 28, weight: .bold))
+                                Text(String((storage.currentMember?.name ?? "M").prefix(1)).uppercased())
+                                    .font(.system(size: 28, weight: .black))
                                     .foregroundColor(.black)
+                                    .multilineTextAlignment(.center)
                             }
 
                             Text(storage.currentMember?.name ?? "Mon Compte")
@@ -255,6 +260,19 @@ struct UserProfileSheet: View {
                                     }
                                     .pickerStyle(MenuPickerStyle())
                                     .accentColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                                }
+                                .padding(12)
+                                .background(Color(red: 0.09, green: 0.12, blue: 0.19))
+                                .cornerRadius(12)
+
+                                HStack {
+                                    Text("Date de naissance")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    DatePicker("", selection: $editBirthDate, in: ...Date(), displayedComponents: .date)
+                                        .labelsHidden()
+                                        .accentColor(Color(red: 0.96, green: 0.62, blue: 0.04))
                                 }
                                 .padding(12)
                                 .background(Color(red: 0.09, green: 0.12, blue: 0.19))
@@ -405,6 +423,7 @@ struct UserProfileSheet: View {
         if let current = storage.currentMember {
             editName = current.name
             editRole = current.role
+            editBirthDate = current.birthDate
             editPhone = current.phone ?? ""
             editShoeSize = current.shoeSize ?? ""
             editClothingSize = current.clothingSize ?? ""
@@ -416,6 +435,7 @@ struct UserProfileSheet: View {
         storage.updateCurrentMember(
             name: editName,
             role: editRole,
+            birthDate: editBirthDate,
             phone: editPhone.isEmpty ? nil : editPhone,
             shoeSize: editShoeSize.isEmpty ? nil : editShoeSize,
             clothingSize: editClothingSize.isEmpty ? nil : editClothingSize,
@@ -448,6 +468,7 @@ struct WelcomeAuthView: View {
     // Identité personnelle
     @State private var myName = ""
     @State private var myRole = "Père"
+    @State private var myBirthDate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var myPhone = ""
     @State private var myShoeSize = ""
     @State private var myClothingSize = ""
@@ -511,7 +532,7 @@ struct WelcomeAuthView: View {
                             .tracking(1)
 
                         VStack(spacing: 10) {
-                            inputRow(label: "Votre Prénom", text: $myName, placeholder: "Ex: Marc-Alban")
+                            inputRow(label: "Votre Prénom", text: $myName, placeholder: "Ex: Marc")
 
                             HStack {
                                 Text("Votre Rôle")
@@ -530,6 +551,25 @@ struct WelcomeAuthView: View {
                             .background(Color(red: 0.06, green: 0.08, blue: 0.13))
                             .cornerRadius(10)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
+
+                            HStack {
+                                Text("Date de naissance")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                DatePicker("", selection: $myBirthDate, in: ...Date(), displayedComponents: .date)
+                                    .labelsHidden()
+                                    .accentColor(Color(red: 0.96, green: 0.62, blue: 0.04))
+                            }
+                            .padding(10)
+                            .background(Color(red: 0.06, green: 0.08, blue: 0.13))
+                            .cornerRadius(10)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.14, green: 0.20, blue: 0.28), lineWidth: 1))
+
+                            HStack(spacing: 8) {
+                                inputRow(label: "Pointure", text: $myShoeSize, placeholder: "Ex: 42")
+                                inputRow(label: "Vêtements", text: $myClothingSize, placeholder: "Ex: L, 40")
+                            }
 
                             inputRow(label: "Péché mignon (optionnel)", text: $myFavouriteTreat, placeholder: "Ex: Tarte Tatin, Marrons...")
                         }
@@ -678,6 +718,7 @@ struct WelcomeAuthView: View {
                     password: inputPassword,
                     creatorName: myName,
                     creatorRole: myRole,
+                    birthDate: myBirthDate,
                     shoeSize: myShoeSize.isEmpty ? nil : myShoeSize,
                     clothingSize: myClothingSize.isEmpty ? nil : myClothingSize,
                     favouriteTreat: myFavouriteTreat.isEmpty ? nil : myFavouriteTreat,
@@ -717,6 +758,7 @@ struct WelcomeAuthView: View {
                     password: inputPassword,
                     userName: myName,
                     userRole: myRole,
+                    birthDate: myBirthDate,
                     shoeSize: myShoeSize.isEmpty ? nil : myShoeSize,
                     clothingSize: myClothingSize.isEmpty ? nil : myClothingSize,
                     favouriteTreat: myFavouriteTreat.isEmpty ? nil : myFavouriteTreat,
