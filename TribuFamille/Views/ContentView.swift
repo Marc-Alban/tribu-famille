@@ -119,19 +119,21 @@ struct ContentView: View {
                     Button(action: {
                         showProfileSheet = true
                     }) {
-                        ZStack {
+                        ZStack(alignment: .center) {
                             Circle()
                                 .fill(Color(red: 0.96, green: 0.62, blue: 0.04))
                                 .frame(width: 38, height: 38)
                             Text(String((storage.currentMember?.name ?? "M").prefix(1)).uppercased())
                                 .font(.system(size: 16, weight: .black))
                                 .foregroundColor(.black)
-                                .multilineTextAlignment(.center)
+                                .frame(width: 38, height: 38, alignment: .center)
                         }
+                        .frame(width: 38, height: 38)
+                        .contentShape(Circle())
                         .overlay(
                             Circle()
                                 .fill(Color(red: 0.06, green: 0.72, blue: 0.50))
-                                .frame(width: 11, height: 11)
+                                .frame(width: 10, height: 10)
                                 .overlay(Circle().stroke(Color(red: 0.04, green: 0.06, blue: 0.10), lineWidth: 2))
                                 .offset(x: 1, y: 1),
                             alignment: .bottomTrailing
@@ -466,11 +468,11 @@ struct UserProfileSheet: View {
 struct WelcomeAuthView: View {
     @EnvironmentObject var storage: StorageManager
     @State private var mode = 1 // 0: Créer une Tribu, 1: Rejoindre une Tribu
-    @State private var showAdvancedOptions = false
+    @State private var showAdvancedOptions = true
     
     // Identité personnelle
-    @State private var myName = ""
-    @State private var myRole = "Père"
+    @State private var myName = "Marc"
+    @State private var myRole = "Fils"
     @State private var myBirthDate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var myPhone = ""
     @State private var myShoeSize = ""
@@ -795,7 +797,8 @@ struct WelcomeAuthView: View {
             if authErr?.code == .canceled {
                 return
             }
-            handleQuickFaceID()
+            errorMessage = "Connexion Apple ID non aboutie : \(error.localizedDescription). Vous pouvez aussi utiliser le bouton Face ID ou entrer directement vos identifiants ci-dessous."
+            showErrorAlert = true
         }
     }
 
@@ -805,11 +808,24 @@ struct WelcomeAuthView: View {
 
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &authError) {
             let reason = "Authentifiez-vous pour accéder à votre Tribu Famille"
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, _ in
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     if success {
                         self.performQuickLogin()
                     } else {
+                        if let laError = evalError as? LAError, laError.code == .userCancel || laError.code == .appCancel {
+                            return
+                        }
+                        self.errorMessage = "Authentification Face ID non confirmée. Vous pouvez utiliser vos identifiants ci-dessous."
+                        self.showErrorAlert = true
+                    }
+                }
+            }
+        } else if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &authError) {
+            let reason = "Authentifiez-vous avec le code de votre iPhone"
+            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, _ in
+                DispatchQueue.main.async {
+                    if success {
                         self.performQuickLogin()
                     }
                 }

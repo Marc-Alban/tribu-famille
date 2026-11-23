@@ -323,7 +323,11 @@ class StorageManager: ObservableObject {
             member: member
         )
 
-        self.currentMember = member
+        if let existing = payload.members.first(where: { $0.id == member.id || $0.name.lowercased() == member.name.lowercased() }) {
+            self.currentMember = existing
+        } else {
+            self.currentMember = member
+        }
         self.tribeCode = payload.code
         self.tribeName = payload.name
         self.tribePassword = payload.password

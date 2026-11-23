@@ -19,7 +19,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleVersion</key>
-    <string>12</string>
+    <string>13</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIRequiresFullScreen</key>
@@ -28,6 +28,8 @@
     <string>Tribu a besoin de l'appareil photo pour ajouter des photos au journal de famille.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Tribu accède à vos photos pour partager vos souvenirs avec la famille.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Tribu Famille utilise Face ID pour sécuriser l'accès à votre espace familial et vous connecter instantanément.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIRequiredDeviceCapabilities</key>

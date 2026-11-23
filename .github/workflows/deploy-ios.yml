@@ -103,10 +103,25 @@ jobs:
                 puts "✅ App trouvée sur App Store Connect : #{apps.first.name} (ID: #{apps.first.id})"
               end
 
+              # 3.b Activer la capability Sign In with Apple (APPLE_ID_AUTH)
+              begin
+                if bundle_id_resource
+                  puts "Vérification / Activation capability Sign In with Apple..."
+                  Spaceship::ConnectAPI.post_bundle_id_capability(
+                    bundle_id_id: bundle_id_resource.id,
+                    capability_type: "APPLE_ID_AUTH"
+                  )
+                  puts "✅ Capability Sign In with Apple configurée sur Apple Developer !"
+                end
+              rescue => e
+                puts "Note Capability: #{e.message}"
+              end
+
               # 4. Téléchargement ou création automatique du profil de provisioning
               get_provisioning_profile(
                 app_identifier: "fr.tribufamille.app",
-                api_key: api_key
+                api_key: api_key,
+                force: true
               )
 
               # 5. Compilation native de l'IPA Release
